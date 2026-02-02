@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/game.dart';
 import '../services/room_service.dart';
@@ -14,16 +14,24 @@ class BrowseRoomsPage extends StatefulWidget {
 
 class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
   final _svc = RoomService();
+  final _searchController = TextEditingController();
 
   List<RoomWithCount> _rooms = [];
   bool _loading = true;
   String? _error;
   String? _selectedGame;
+  bool _hideFullRooms = false;
 
   @override
   void initState() {
     super.initState();
     _loadRooms();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadRooms() async {
@@ -33,7 +41,11 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
     });
 
     try {
-      final rooms = await _svc.listOpenRooms(gameKey: _selectedGame);
+      final rooms = await _svc.listOpenRooms(
+        gameKey: _selectedGame,
+        searchQuery: _searchController.text,
+        hideFullRooms: _hideFullRooms,
+      );
       if (mounted) {
         setState(() {
           _rooms = rooms;
@@ -55,6 +67,15 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
     _loadRooms();
   }
 
+  void _onSearch(String value) {
+    _loadRooms();
+  }
+
+  void _toggleHideFullRooms() {
+    setState(() => _hideFullRooms = !_hideFullRooms);
+    _loadRooms();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,6 +85,9 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
           children: [
             // 커스텀 헤더
             _buildHeader(),
+
+            // 검색 바
+            _buildSearchBar(),
 
             // 게임 필터 + 새로고침
             _buildGameFilter(),
@@ -100,7 +124,6 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
     );
   }
 
-  /// 공통 아이콘 버튼 (둥근 사각형 호버)
   Widget _buildIconButton({
     required IconData icon,
     required VoidCallback onPressed,
@@ -129,9 +152,75 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
     );
   }
 
+  /// 검색 바
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          // 검색 입력
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onSubmitted: _onSearch,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: AppColors.textPrimary,
+              ),
+              decoration: InputDecoration(
+                hintText: '방 이름으로 검색',
+                hintStyle: TextStyle(color: AppColors.textMuted),
+                prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: AppColors.textMuted),
+                        onPressed: () {
+                          _searchController.clear();
+                          _loadRooms();
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: AppColors.bgCard,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.borderSubtle),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.borderSubtle),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.accentPurple),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 검색 버튼
+          Material(
+            color: AppColors.accentPurple,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: () => _loadRooms(),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 48,
+                height: 48,
+                child: Icon(Icons.search, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildGameFilter() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
           // 게임 필터 칩들
@@ -147,18 +236,53 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
                   ),
                   const SizedBox(width: 8),
                   ...GameData.games.map((game) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: _buildFilterChip(
-                      label: '${game.icon} ${game.name}',
-                      isSelected: _selectedGame == game.key,
-                      onTap: () => _onGameFilterChanged(game.key),
-                    ),
-                  )),
+                        padding: const EdgeInsets.only(right: 8),
+                        child: _buildFilterChip(
+                          label: '${game.icon} ${game.name}',
+                          isSelected: _selectedGame == game.key,
+                          onTap: () => _onGameFilterChanged(game.key),
+                        ),
+                      )),
                 ],
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
+          // 가득 찬 방 숨기기 토글
+          GestureDetector(
+            onTap: _toggleHideFullRooms,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: _hideFullRooms ? AppColors.accentPurple.withOpacity(0.15) : AppColors.bgCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _hideFullRooms ? AppColors.accentPurple : AppColors.borderSubtle,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _hideFullRooms ? Icons.check_box : Icons.check_box_outline_blank,
+                    size: 16,
+                    color: _hideFullRooms ? AppColors.accentPurple : AppColors.textMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '빈 방만',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: _hideFullRooms ? AppColors.accentPurple : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           // 새로고침 버튼
           Material(
             color: AppColors.bgCard,
@@ -167,8 +291,8 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
               onTap: _loading ? null : _loadRooms,
               borderRadius: BorderRadius.circular(10),
               child: Container(
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: AppColors.borderSubtle),
@@ -176,15 +300,15 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
                 child: _loading
                     ? Center(
                         child: SizedBox(
-                          width: 20,
-                          height: 20,
+                          width: 18,
+                          height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: AppColors.accentPurple,
                           ),
                         ),
                       )
-                    : Icon(Icons.refresh, color: AppColors.textPrimary, size: 22),
+                    : Icon(Icons.refresh, color: AppColors.textPrimary, size: 20),
               ),
             ),
           ),
@@ -267,7 +391,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              '열린 방이 없어요',
+              _searchController.text.isNotEmpty ? '검색 결과가 없어요' : '열린 방이 없어요',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 16,
@@ -301,9 +425,17 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 반응형 그리드: 화면 너비에 따라 열 수 결정 (더 조밀하게)
+        // 반응형 그리드: 화면 너비에 따라 열 수 결정
         final width = constraints.maxWidth;
-        final crossAxisCount = width > 1400 ? 5 : width > 1100 ? 4 : width > 800 ? 3 : width > 500 ? 2 : 1;
+        final crossAxisCount = width > 1400
+            ? 5
+            : width > 1100
+                ? 4
+                : width > 800
+                    ? 3
+                    : width > 500
+                        ? 2
+                        : 1;
 
         return GridView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -311,7 +443,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,
-            childAspectRatio: crossAxisCount == 1 ? 4.0 : 1.8,
+            childAspectRatio: crossAxisCount == 1 ? 3.5 : 1.6,
           ),
           itemCount: _rooms.length,
           itemBuilder: (context, index) => _buildRoomCard(_rooms[index]),
@@ -356,7 +488,8 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
 
     // 툴팁 메시지 구성
     final tooltipMessage = [
-      '${game?.name ?? room.gameKey} - ${mode?.name ?? room.mode}',
+      if (room.roomName != null && room.roomName!.isNotEmpty) '📝 ${room.roomName}',
+      '${game?.name ?? room.gameKey}${mode != null ? " - ${mode.name}" : ""}',
       '목표: ${goal?.name ?? room.goal}',
       '인원: ${roomWithCount.joinedCount}/${room.maxMembers}명',
       '마이크: ${room.requireMic ? "필수" : "선택"}',
@@ -389,134 +522,151 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
       child: GestureDetector(
         onTap: isFull ? null : () => context.go('/r/${room.code}'),
         child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: AppColors.bgCard,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderSubtle),
-        ),
-        child: Opacity(
-          opacity: isFull ? 0.5 : 1.0,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 상단: 게임 아이콘 + 이름 + 목표 태그
-              Row(
-                children: [
-                  if (game != null)
-                    Text(game.icon, style: const TextStyle(fontSize: 20)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          game?.name ?? room.gameKey.toUpperCase(),
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          mode?.name ?? room.mode,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 11,
-                            color: AppColors.textSecondary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppColors.bgCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.borderSubtle),
+          ),
+          child: Opacity(
+            opacity: isFull ? 0.5 : 1.0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 상단: 방 이름 (있으면)
+                if (room.roomName != null && room.roomName!.isNotEmpty) ...[
+                  Text(
+                    room.roomName!,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
                     ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
-                  // 목표 태그
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: _getGoalColor(room.goal).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4),
+                  const SizedBox(height: 4),
+                ],
+
+                // 게임 정보
+                Row(
+                  children: [
+                    if (game != null)
+                      Text(game.icon, style: const TextStyle(fontSize: 18)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            game?.name ?? room.gameKey.toUpperCase(),
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (mode != null)
+                            Text(
+                              mode.name,
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 10,
+                                color: AppColors.textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      ),
                     ),
-                    child: Text(
-                      goal?.name ?? room.goal,
+                    // 목표 태그
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _getGoalColor(room.goal).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        goal?.name ?? room.goal,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: _getGoalColor(room.goal),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const Spacer(),
+
+                // 하단: 인원 + 마이크 + 남은 시간 + 입장
+                Row(
+                  children: [
+                    Icon(
+                      Icons.people,
+                      size: 12,
+                      color: isFull ? AppColors.accentRed : AppColors.accentGreen,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${roomWithCount.joinedCount}/${room.maxMembers}',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isFull ? AppColors.accentRed : AppColors.accentGreen,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      room.requireMic ? Icons.mic : Icons.mic_off,
+                      size: 12,
+                      color: room.requireMic ? AppColors.textSecondary : AppColors.textMuted,
+                    ),
+                    const SizedBox(width: 8),
+                    // 남은 시간
+                    Icon(
+                      Icons.schedule,
+                      size: 12,
+                      color: timeColor,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      _formatRemainingTime(room.expiresAt),
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: _getGoalColor(room.goal),
+                        fontWeight: FontWeight.w500,
+                        color: timeColor,
                       ),
                     ),
-                  ),
-                ],
-              ),
-
-              const Spacer(),
-
-              // 하단: 인원 + 마이크 + 남은 시간 + 입장
-              Row(
-                children: [
-                  Icon(
-                    Icons.people,
-                    size: 12,
-                    color: isFull ? AppColors.accentRed : AppColors.accentGreen,
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    '${roomWithCount.joinedCount}/${room.maxMembers}',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isFull ? AppColors.accentRed : AppColors.accentGreen,
+                    const Spacer(),
+                    // 입장 아이콘
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: isFull
+                            ? AppColors.textMuted.withOpacity(0.1)
+                            : AppColors.accentPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(
+                        isFull ? Icons.block : Icons.arrow_forward_rounded,
+                        size: 14,
+                        color: isFull ? AppColors.textMuted : AppColors.accentPurple,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    room.requireMic ? Icons.mic : Icons.mic_off,
-                    size: 12,
-                    color: room.requireMic ? AppColors.textSecondary : AppColors.textMuted,
-                  ),
-                  const SizedBox(width: 8),
-                  // 남은 시간
-                  Icon(
-                    Icons.schedule,
-                    size: 12,
-                    color: timeColor,
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    _formatRemainingTime(room.expiresAt),
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      color: timeColor,
-                    ),
-                  ),
-                  const Spacer(),
-                  // 입장 아이콘
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: isFull
-                          ? AppColors.textMuted.withValues(alpha: 0.1)
-                          : AppColors.accentPurple.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Icon(
-                      isFull ? Icons.block : Icons.arrow_forward_rounded,
-                      size: 14,
-                      color: isFull ? AppColors.textMuted : AppColors.accentPurple,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

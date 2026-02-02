@@ -17,6 +17,16 @@ class RoomService {
     return Room.fromMap(data);
   }
 
+  /// 방 ID로 조회
+  Future<Room> getRoomById(String roomId) async {
+    final data = await supa()
+        .from('rooms')
+        .select()
+        .eq('id', roomId)
+        .single();
+    return Room.fromMap(data);
+  }
+
   /// 방 코드 존재 여부 확인 (코드 생성 시 중복 체크용)
   Future<bool> checkCodeExists(String code) async {
     final rows = await supa()
@@ -49,13 +59,18 @@ class RoomService {
   /// 새 방 생성 → 방 ID 반환
   Future<String> createRoom({
     required String gameKey,
-    required String mode,
+    String? mode,
     required String goal,
     required List<String> slots,
     required bool requireMic,
     required int maxMembers,
     required String code,
     required DateTime expiresAt,
+    String? roomName,
+    int teamCount = 1,
+    int membersPerTeam = 5,
+    List<String>? customSlotNames,
+    String? hostSessionId,
   }) async {
     final row = await supa().from('rooms').insert({
       'code': code,
@@ -67,9 +82,38 @@ class RoomService {
       'require_mic': requireMic,
       'status': 'open',
       'expires_at': expiresAt.toIso8601String(),
+      'room_name': roomName,
+      'team_count': teamCount,
+      'members_per_team': membersPerTeam,
+      'custom_slot_names': customSlotNames,
+      'host_session_id': hostSessionId,
     }).select('id').single();
 
     return row['id'].toString();
+  }
+
+  /// 방 설정 업데이트 (방장 전용)
+  Future<void> updateRoom({
+    required String roomId,
+    int? teamCount,
+    int? membersPerTeam,
+    List<String>? slots,
+    List<String>? customSlotNames,
+    bool? requireMic,
+    int? maxMembers,
+  }) async {
+    final Map<String, dynamic> updates = {};
+
+    if (teamCount != null) updates['team_count'] = teamCount;
+    if (membersPerTeam != null) updates['members_per_team'] = membersPerTeam;
+    if (slots != null) updates['slots'] = slots;
+    if (customSlotNames != null) updates['custom_slot_names'] = customSlotNames;
+    if (requireMic != null) updates['require_mic'] = requireMic;
+    if (maxMembers != null) updates['max_members'] = maxMembers;
+
+    if (updates.isNotEmpty) {
+      await supa().from('rooms').update(updates).eq('id', roomId);
+    }
   }
 
   // ─── 멤버 관리 ──────────────────────────────────────────
@@ -91,12 +135,36 @@ class RoomService {
     required String roomId,
     required String displayName,
     String? tag,
+    String? inviteId,
+    String? sessionId,
   }) async {
     final row = await supa().from('members').insert({
       'room_id': roomId,
       'display_name': displayName,
       'tag': tag,
       'state': 'watching',
+      'invite_id': inviteId,
+      'session_id': sessionId,
+    }).select('id').single();
+
+    return row['id'].toString();
+  }
+
+  /// 슬롯에 바로 참여 (입장 즉시 자리 배정)
+  Future<String> enterAndJoinSlot({
+    required String roomId,
+    required String displayName,
+    required String role,
+    String? inviteId,
+    String? sessionId,
+  }) async {
+    final row = await supa().from('members').insert({
+      'room_id': roomId,
+      'display_name': displayName,
+      'role': role,
+      'state': 'joined',
+      'invite_id': inviteId,
+      'session_id': sessionId,
     }).select('id').single();
 
     return row['id'].toString();
@@ -139,6 +207,22 @@ class RoomService {
     }).eq('id', memberId);
   }
 
+  /// 멤버 정보 업데이트 (닉네임, 초대방법 등)
+  Future<void> updateMember({
+    required String memberId,
+    String? displayName,
+    String? inviteId,
+  }) async {
+    final Map<String, dynamic> updates = {
+      'last_seen_at': DateTime.now().toUtc().toIso8601String(),
+    };
+
+    if (displayName != null) updates['display_name'] = displayName;
+    if (inviteId != null) updates['invite_id'] = inviteId;
+
+    await supa().from('members').update(updates).eq('id', memberId);
+  }
+
   /// 슬롯 해제 (joined → watching, 역할 변경 시 사용)
   Future<void> releaseSlot({required String memberId}) async {
     await supa().from('members').update({
@@ -156,10 +240,31 @@ class RoomService {
     }).eq('id', memberId);
   }
 
+  /// 세션 ID로 멤버 찾기 (퇴장 처리용)
+  Future<Member?> findMemberBySession({
+    required String roomId,
+    required String sessionId,
+  }) async {
+    final rows = await supa()
+        .from('members')
+        .select()
+        .eq('room_id', roomId)
+        .eq('session_id', sessionId)
+        .inFilter('state', ['watching', 'joined'])
+        .limit(1);
+
+    if (rows.isEmpty) return null;
+    return Member.fromMap(rows.first);
+  }
+
   // ─── 방 목록 조회 ────────────────────────────────────────
 
-  /// 열린 방 목록 조회 (게임 필터 가능)
-  Future<List<RoomWithCount>> listOpenRooms({String? gameKey}) async {
+  /// 열린 방 목록 조회 (게임 필터, 검색어, 가득 찬 방 숨기기 가능)
+  Future<List<RoomWithCount>> listOpenRooms({
+    String? gameKey,
+    String? searchQuery,
+    bool hideFullRooms = false,
+  }) async {
     var query = supa()
         .from('rooms')
         .select()
@@ -170,13 +275,24 @@ class RoomService {
       query = query.eq('game_key', gameKey);
     }
 
-    final rows = await query.order('created_at', ascending: false).limit(50);
+    // 방 이름 검색 (ilike 사용)
+    if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+      query = query.ilike('room_name', '%${searchQuery.trim()}%');
+    }
+
+    final rows = await query.order('created_at', ascending: false).limit(100);
     final rooms = rows.map<Room>((r) => Room.fromMap(r)).toList();
 
     // 각 방의 참여 인원 수 조회
     final List<RoomWithCount> result = [];
     for (final room in rooms) {
       final memberCount = await _countJoinedMembers(room.id);
+
+      // 가득 찬 방 숨기기
+      if (hideFullRooms && memberCount >= room.maxMembers) {
+        continue;
+      }
+
       result.add(RoomWithCount(room: room, joinedCount: memberCount));
     }
 
@@ -192,6 +308,41 @@ class RoomService {
         .eq('state', 'joined');
     return rows.length;
   }
+
+  /// 방에서 빈 슬롯 찾기
+  Future<String?> findEmptySlot(String roomId) async {
+    final room = await getRoomById(roomId);
+    final members = await listMembers(roomId);
+
+    final occupiedRoles = members
+        .where((m) => m.isJoined && m.role != null)
+        .map((m) => m.role!)
+        .toSet();
+
+    for (final slot in room.slots) {
+      if (!occupiedRoles.contains(slot)) {
+        return slot;
+      }
+    }
+    return null;
+  }
+
+  /// 다음 사용자 번호 생성 (사용자 1, 사용자 2, ...)
+  Future<int> getNextUserNumber(String roomId) async {
+    final members = await listMembers(roomId);
+    int maxNum = 0;
+
+    final regex = RegExp(r'사용자 (\d+)');
+    for (final m in members) {
+      final match = regex.firstMatch(m.displayName);
+      if (match != null) {
+        final num = int.tryParse(match.group(1) ?? '0') ?? 0;
+        if (num > maxNum) maxNum = num;
+      }
+    }
+
+    return maxNum + 1;
+  }
 }
 
 /// 방 정보 + 참여 인원 수
@@ -200,4 +351,7 @@ class RoomWithCount {
   final int joinedCount;
 
   RoomWithCount({required this.room, required this.joinedCount});
+
+  /// 방이 가득 찼는지 확인
+  bool get isFull => joinedCount >= room.maxMembers;
 }

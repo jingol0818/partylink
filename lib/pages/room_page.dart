@@ -11,6 +11,8 @@ import '../services/realtime_service.dart';
 import '../services/session_service.dart';
 import '../services/share_service.dart';
 import '../services/chat_service.dart';
+import '../services/sound_service.dart';
+import '../services/profanity_filter_service.dart';
 import '../theme/app_theme.dart';
 
 /// 방 메인 화면 (/room/:code)
@@ -38,6 +40,8 @@ class _RoomPageState extends State<RoomPage> {
   bool _loading = true;
   String? _error;
   bool _showChat = false;
+  int _unreadMessages = 0;
+  bool _allReadyPlayed = false; // 모두 준비 완료 사운드 재생 여부
 
   StreamSubscription? _realtimeSub;
   StreamSubscription? _chatSub;
@@ -53,6 +57,12 @@ class _RoomPageState extends State<RoomPage> {
     if (_myMemberId == null) return null;
     final matches = _members.where((m) => m.id == _myMemberId);
     return matches.isEmpty ? null : matches.first;
+  }
+
+  /// 방장 여부 확인
+  bool get _isHost {
+    if (_room == null) return false;
+    return _room!.hostSessionId == SessionService.sessionId;
   }
 
   // --- 방 상태 계산 ---
@@ -72,6 +82,13 @@ class _RoomPageState extends State<RoomPage> {
         .map((m) => m.role!)
         .toSet();
     return _room!.slots.where((s) => !takenRoles.contains(s)).toList();
+  }
+
+  /// 모든 슬롯이 채워졌고 모두 Ready인지 확인
+  bool get _allSlotsReady {
+    if (_room == null) return false;
+    if (_joinedCount < _room!.maxMembers) return false;
+    return _joinedMembers.every((m) => m.ready);
   }
 
   /// 슬롯 변경 가능 여부 (관전 중이거나, 참여 중이지만 Ready 전)
@@ -130,7 +147,13 @@ class _RoomPageState extends State<RoomPage> {
         _messages = await _chat.getMessages(room.id);
         _chatSub = _chat.onMessage.listen((msg) {
           if (mounted) {
-            setState(() => _messages = [..._messages, msg]);
+            setState(() {
+              _messages = [..._messages, msg];
+              // 채팅창이 닫혀있을 때만 읽지 않은 메시지 카운트 증가
+              if (!_showChat) {
+                _unreadMessages++;
+              }
+            });
             _scrollToBottom();
           }
         });
@@ -140,6 +163,9 @@ class _RoomPageState extends State<RoomPage> {
 
       // 만료 타이머 시작
       _startExpiryTimer();
+
+      // 모두 Ready 체크
+      _checkAllReady();
 
       setState(() => _loading = false);
     } catch (e) {
@@ -176,8 +202,21 @@ class _RoomPageState extends State<RoomPage> {
     if (_room == null) return;
     try {
       final members = await _svc.listMembers(_room!.id);
-      if (mounted) setState(() => _members = members);
+      if (mounted) {
+        setState(() => _members = members);
+        _checkAllReady();
+      }
     } catch (_) {}
+  }
+
+  /// 모두 Ready 체크 및 사운드 재생
+  void _checkAllReady() {
+    if (_allSlotsReady && !_allReadyPlayed) {
+      _allReadyPlayed = true;
+      SoundService.playReadySound();
+    } else if (!_allSlotsReady) {
+      _allReadyPlayed = false;
+    }
   }
 
   void _scrollToBottom() {
@@ -313,6 +352,76 @@ class _RoomPageState extends State<RoomPage> {
     );
   }
 
+  /// 방장 설정 다이얼로그
+  Future<void> _showHostSettings() async {
+    if (_room == null || !_isHost) return;
+
+    await showDialog(
+      context: context,
+      builder: (_) => _HostSettingsDialog(
+        room: _room!,
+        onSave: (teamCount, membersPerTeam, requireMic, customSlotNames) async {
+          // 새 슬롯 이름 생성
+          final game = GameData.findGame(_room!.gameKey);
+          List<String> newSlots;
+          if (customSlotNames != null && customSlotNames.isNotEmpty) {
+            newSlots = customSlotNames;
+          } else if (game != null) {
+            newSlots = game.generateSlotNames(
+              modeKey: _room!.mode,
+              teamCount: teamCount,
+              membersPerTeam: membersPerTeam,
+            );
+          } else {
+            newSlots = List.generate(
+              teamCount * membersPerTeam,
+              (i) => '슬롯 ${i + 1}',
+            );
+          }
+
+          await _svc.updateRoom(
+            roomId: _room!.id,
+            teamCount: teamCount,
+            membersPerTeam: membersPerTeam,
+            requireMic: requireMic,
+            slots: newSlots,
+            customSlotNames: customSlotNames,
+            maxMembers: teamCount * membersPerTeam,
+          );
+
+          // 방 정보 다시 로드
+          final room = await _svc.getRoomByCode(widget.code);
+          if (mounted) {
+            setState(() => _room = room);
+          }
+          _showSnackBar('설정이 저장되었어요!');
+        },
+      ),
+    );
+  }
+
+  /// 내 정보 수정 다이얼로그
+  Future<void> _showEditMyInfo() async {
+    final me = _me;
+    if (me == null || _myMemberId == null) return;
+
+    await showDialog(
+      context: context,
+      builder: (_) => _EditMyInfoDialog(
+        member: me,
+        onSave: (displayName, inviteId) async {
+          await _svc.updateMember(
+            memberId: _myMemberId!,
+            displayName: displayName,
+            inviteId: inviteId,
+          );
+          await _refreshMembers();
+          _showSnackBar('정보가 수정되었어요!');
+        },
+      ),
+    );
+  }
+
   /// 방 나가기
   Future<void> _leaveRoom() async {
     final confirm = await showDialog<bool>(
@@ -365,6 +474,56 @@ class _RoomPageState extends State<RoomPage> {
     if (mounted) context.go('/');
   }
 
+  /// 뒤로가기 버튼 처리
+  Future<bool> _onWillPop() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          '방 나가기',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Text(
+          '뒤로 가면 방에서 나가게 돼요. 나갈까요?',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            color: AppColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              '취소',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              '나가기',
+              style: TextStyle(color: AppColors.accentRed),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && _myMemberId != null) {
+      try {
+        await _svc.leaveMember(memberId: _myMemberId!);
+      } catch (_) {}
+    }
+
+    return confirm ?? false;
+  }
+
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -405,14 +564,24 @@ class _RoomPageState extends State<RoomPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bgPage,
-      body: SafeArea(
-        child: _loading
-            ? Center(child: CircularProgressIndicator(color: AppColors.accentPurple))
-            : _error != null
-                ? _buildErrorView()
-                : _buildContent(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _onWillPop();
+        if (shouldPop && mounted) {
+          context.go('/');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.bgPage,
+        body: SafeArea(
+          child: _loading
+              ? Center(child: CircularProgressIndicator(color: AppColors.accentPurple))
+              : _error != null
+                  ? _buildErrorView()
+                  : _buildContent(),
+        ),
       ),
     );
   }
@@ -458,7 +627,7 @@ class _RoomPageState extends State<RoomPage> {
             ),
           ),
         ),
-        if (badge != null)
+        if (badge != null && badge > 0)
           Positioned(
             right: 0,
             top: 0,
@@ -583,6 +752,10 @@ class _RoomPageState extends State<RoomPage> {
                         _buildRoomInfoCard(room),
                         const SizedBox(height: 16),
 
+                        // 모두 준비 완료 배너
+                        if (_allSlotsReady)
+                          ...[_buildAllReadyBanner(), const SizedBox(height: 16)],
+
                         // 만료/마감 경고
                         if (!room.isOpen || _remainingTime == Duration.zero)
                           ...[_buildExpiredBanner(), const SizedBox(height: 16)],
@@ -625,6 +798,9 @@ class _RoomPageState extends State<RoomPage> {
 
   /// 커스텀 헤더 (콘텐츠와 정렬)
   Widget _buildCustomHeader(bool isMobile) {
+    // 방 이름 또는 기본 타이틀
+    final title = _room?.roomName ?? '파티 #${widget.code}';
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 8 : 24,
@@ -638,21 +814,50 @@ class _RoomPageState extends State<RoomPage> {
               // 뒤로가기 버튼
               _buildIconButton(
                 icon: Icons.arrow_back,
-                onPressed: () => context.go('/'),
+                onPressed: () async {
+                  final shouldPop = await _onWillPop();
+                  if (shouldPop && mounted) {
+                    context.go('/');
+                  }
+                },
               ),
               const SizedBox(width: 8),
-              // 타이틀
+              // 타이틀 (방 이름)
               Expanded(
                 child: Text(
-                  '파티 #${widget.code}',
+                  title,
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              // 방장 설정 버튼
+              if (_isHost) ...[
+                Tooltip(
+                  message: '방 설정',
+                  textStyle: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCard,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.borderSubtle),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: _buildHeaderButton(
+                    icon: Icons.settings,
+                    isActive: false,
+                    onPressed: _showHostSettings,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
               // 채팅 버튼
               Tooltip(
                 message: _showChat ? '채팅 닫기' : '채팅 열기',
@@ -670,8 +875,15 @@ class _RoomPageState extends State<RoomPage> {
                 child: _buildHeaderButton(
                   icon: _showChat ? Icons.chat : Icons.chat_outlined,
                   isActive: _showChat,
-                  onPressed: () => setState(() => _showChat = !_showChat),
-                  badge: _messages.isNotEmpty ? _messages.length : null,
+                  onPressed: () {
+                    setState(() {
+                      _showChat = !_showChat;
+                      if (_showChat) {
+                        _unreadMessages = 0;
+                      }
+                    });
+                  },
+                  badge: _showChat ? null : _unreadMessages,
                 ),
               ),
               const SizedBox(width: 8),
@@ -699,6 +911,53 @@ class _RoomPageState extends State<RoomPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// 모든 슬롯 준비 완료 배너
+  Widget _buildAllReadyBanner() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.accentGreen.withValues(alpha: 0.2),
+            AppColors.accentPurple.withValues(alpha: 0.2),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.accentGreen.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.celebration, color: AppColors.accentGreen, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '모두 준비 완료!',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  '게임을 시작하세요 🎮',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1010,50 +1269,57 @@ class _RoomPageState extends State<RoomPage> {
         children: [
           if (!isMe) const SizedBox(width: 8),
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isMe ? AppColors.accentPurple : AppColors.bgCard,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isMe ? 16 : 4),
-                  bottomRight: Radius.circular(isMe ? 4 : 16),
-                ),
-                border: isMe ? null : Border.all(color: AppColors.borderSubtle),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+            child: GestureDetector(
+              onLongPress: () {
+                // 메시지 복사
+                Clipboard.setData(ClipboardData(text: msg.content));
+                _showSnackBar('메시지가 복사되었어요');
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isMe ? AppColors.accentPurple : AppColors.bgCard,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(16),
+                    topRight: const Radius.circular(16),
+                    bottomLeft: Radius.circular(isMe ? 16 : 4),
+                    bottomRight: Radius.circular(isMe ? 4 : 16),
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!isMe)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        msg.senderName,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.accentPurple,
+                  border: isMe ? null : Border.all(color: AppColors.borderSubtle),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!isMe)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          msg.senderName,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.accentPurple,
+                          ),
                         ),
                       ),
+                    SelectableText(
+                      msg.content,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        color: isMe ? Colors.white : AppColors.textPrimary,
+                      ),
                     ),
-                  Text(
-                    msg.content,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      color: isMe ? Colors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -1102,7 +1368,9 @@ class _RoomPageState extends State<RoomPage> {
                       ),
                     ),
                     Text(
-                      '${mode?.name ?? room.mode} · ${goal?.name ?? room.goal}',
+                      mode != null
+                          ? '${mode.name} · ${goal?.name ?? room.goal}'
+                          : goal?.name ?? room.goal,
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 13,
@@ -1113,6 +1381,32 @@ class _RoomPageState extends State<RoomPage> {
                   ],
                 ),
               ),
+              // 방장 뱃지
+              if (_isHost)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentOrange.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.accentOrange.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.star, size: 14, color: AppColors.accentOrange),
+                      const SizedBox(width: 4),
+                      Text(
+                        '방장',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.accentOrange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -1276,34 +1570,74 @@ class _RoomPageState extends State<RoomPage> {
               child: isFilled
                   ? Row(
                       children: [
-                        Text(
-                          member.displayName,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    member.displayName,
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  if (isMe) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.accentPurple,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        'ME',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              if (member.inviteId != null && member.inviteId!.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: SelectableText(
+                                        member.inviteId!,
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 12,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Clipboard.setData(ClipboardData(text: member.inviteId!));
+                                        _showSnackBar('초대 정보가 복사되었어요');
+                                      },
+                                      child: Icon(
+                                        Icons.copy,
+                                        size: 14,
+                                        color: AppColors.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        if (isMe) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppColors.accentPurple,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'ME',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     )
                   : Text(
@@ -1418,6 +1752,26 @@ class _RoomPageState extends State<RoomPage> {
                   ),
                 ),
               ),
+              const Spacer(),
+              // 내 정보 수정 버튼
+              if (me != null)
+                TextButton.icon(
+                  onPressed: _showEditMyInfo,
+                  icon: Icon(Icons.edit, size: 16, color: AppColors.accentPurple),
+                  label: Text(
+                    '수정',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: AppColors.accentPurple,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -1487,6 +1841,627 @@ class _RoomPageState extends State<RoomPage> {
           onPressed: _loadRoom,
         ),
       ],
+    );
+  }
+}
+
+/// 방장 설정 다이얼로그
+class _HostSettingsDialog extends StatefulWidget {
+  final Room room;
+  final Future<void> Function(int teamCount, int membersPerTeam, bool requireMic, List<String>? customSlotNames) onSave;
+
+  const _HostSettingsDialog({
+    required this.room,
+    required this.onSave,
+  });
+
+  @override
+  State<_HostSettingsDialog> createState() => _HostSettingsDialogState();
+}
+
+class _HostSettingsDialogState extends State<_HostSettingsDialog> {
+  late int _teamCount;
+  late int _membersPerTeam;
+  late bool _requireMic;
+  final List<TextEditingController> _slotControllers = [];
+  bool _useCustomSlots = false;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _teamCount = widget.room.teamCount;
+    _membersPerTeam = widget.room.membersPerTeam;
+    _requireMic = widget.room.requireMic;
+    _useCustomSlots = widget.room.customSlotNames != null && widget.room.customSlotNames!.isNotEmpty;
+
+    // 슬롯 컨트롤러 초기화
+    _updateSlotControllers();
+  }
+
+  void _updateSlotControllers() {
+    final totalSlots = _teamCount * _membersPerTeam;
+
+    // 기존 컨트롤러 정리
+    for (var c in _slotControllers) {
+      c.dispose();
+    }
+    _slotControllers.clear();
+
+    // 새 컨트롤러 생성
+    for (int i = 0; i < totalSlots; i++) {
+      final existing = widget.room.customSlotNames != null && i < widget.room.customSlotNames!.length
+          ? widget.room.customSlotNames![i]
+          : widget.room.slots.length > i
+              ? widget.room.slots[i]
+              : '슬롯 ${i + 1}';
+      _slotControllers.add(TextEditingController(text: existing));
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var c in _slotControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+
+    List<String>? customSlots;
+    if (_useCustomSlots) {
+      customSlots = _slotControllers.map((c) => c.text.trim()).toList();
+      // 빈 슬롯 이름 검증
+      if (customSlots.any((s) => s.isEmpty)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('모든 슬롯 이름을 입력해주세요')),
+        );
+        setState(() => _saving = false);
+        return;
+      }
+    }
+
+    try {
+      await widget.onSave(_teamCount, _membersPerTeam, _requireMic, customSlots);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('저장 중 오류가 발생했어요')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final totalSlots = _teamCount * _membersPerTeam;
+
+    return AlertDialog(
+      backgroundColor: AppColors.bgCard,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      contentPadding: const EdgeInsets.all(24),
+      content: SizedBox(
+        width: 400,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 헤더
+              Row(
+                children: [
+                  Icon(Icons.settings, color: AppColors.accentPurple, size: 24),
+                  const SizedBox(width: 12),
+                  Text(
+                    '방 설정',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // 팀 수
+              Text(
+                '팀 수',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: _teamCount > 1
+                        ? () => setState(() {
+                              _teamCount--;
+                              _updateSlotControllers();
+                            })
+                        : null,
+                    icon: Icon(Icons.remove_circle_outline),
+                    color: AppColors.accentPurple,
+                  ),
+                  Container(
+                    width: 60,
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$_teamCount',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _teamCount < Game.maxTeamCount
+                        ? () => setState(() {
+                              _teamCount++;
+                              _updateSlotControllers();
+                            })
+                        : null,
+                    icon: Icon(Icons.add_circle_outline),
+                    color: AppColors.accentPurple,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // 팀당 인원
+              Text(
+                '팀당 인원',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: _membersPerTeam > 1
+                        ? () => setState(() {
+                              _membersPerTeam--;
+                              _updateSlotControllers();
+                            })
+                        : null,
+                    icon: Icon(Icons.remove_circle_outline),
+                    color: AppColors.accentPurple,
+                  ),
+                  Container(
+                    width: 60,
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$_membersPerTeam',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _membersPerTeam < Game.maxMembersPerTeam
+                        ? () => setState(() {
+                              _membersPerTeam++;
+                              _updateSlotControllers();
+                            })
+                        : null,
+                    icon: Icon(Icons.add_circle_outline),
+                    color: AppColors.accentPurple,
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    '총 $totalSlots명',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // 마이크 필수
+              Row(
+                children: [
+                  Text(
+                    '마이크 필수',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Switch(
+                    value: _requireMic,
+                    onChanged: (v) => setState(() => _requireMic = v),
+                    activeColor: AppColors.accentGreen,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // 슬롯 이름 커스텀
+              Row(
+                children: [
+                  Text(
+                    '슬롯 이름 직접 설정',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Switch(
+                    value: _useCustomSlots,
+                    onChanged: (v) => setState(() => _useCustomSlots = v),
+                    activeColor: AppColors.accentPurple,
+                  ),
+                ],
+              ),
+
+              if (_useCustomSlots) ...[
+                const SizedBox(height: 16),
+                ...List.generate(totalSlots, (i) {
+                  if (i >= _slotControllers.length) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: TextField(
+                      controller: _slotControllers[i],
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: '슬롯 ${i + 1}',
+                        labelStyle: TextStyle(color: AppColors.textSecondary),
+                        filled: true,
+                        fillColor: AppColors.bgElevated,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.borderSubtle),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.borderSubtle),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.accentPurple),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+
+              const SizedBox(height: 24),
+
+              // 버튼
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        side: BorderSide(color: AppColors.borderSubtle),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text('취소'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _saving ? null : _save,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accentPurple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _saving
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text('저장'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 내 정보 수정 다이얼로그
+class _EditMyInfoDialog extends StatefulWidget {
+  final Member member;
+  final Future<void> Function(String displayName, String? inviteId) onSave;
+
+  const _EditMyInfoDialog({
+    required this.member,
+    required this.onSave,
+  });
+
+  @override
+  State<_EditMyInfoDialog> createState() => _EditMyInfoDialogState();
+}
+
+class _EditMyInfoDialogState extends State<_EditMyInfoDialog> {
+  late TextEditingController _nameCtrl;
+  late TextEditingController _inviteIdCtrl;
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.member.displayName);
+    _inviteIdCtrl = TextEditingController(text: widget.member.inviteId ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _inviteIdCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final name = _nameCtrl.text.trim();
+    final nameError = ProfanityFilterService.validateNickname(name);
+    if (nameError != null) {
+      setState(() => _error = nameError);
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+
+    try {
+      final inviteId = _inviteIdCtrl.text.trim();
+      await widget.onSave(name, inviteId.isEmpty ? null : inviteId);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _error = '저장 중 오류가 발생했어요');
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.bgCard,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      contentPadding: const EdgeInsets.all(24),
+      content: SizedBox(
+        width: 360,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 헤더
+            Row(
+              children: [
+                Icon(Icons.person, color: AppColors.accentPurple, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  '내 정보 수정',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.close, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // 닉네임
+            Text(
+              '닉네임',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _nameCtrl,
+              maxLength: 20,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 16,
+                color: AppColors.textPrimary,
+              ),
+              decoration: InputDecoration(
+                hintText: '닉네임을 입력하세요',
+                hintStyle: TextStyle(color: AppColors.textMuted),
+                counterText: '',
+                filled: true,
+                fillColor: AppColors.bgElevated,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.borderSubtle),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.borderSubtle),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.accentPurple),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // 초대 방법
+            Text(
+              '초대 방법 (선택)',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _inviteIdCtrl,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 16,
+                color: AppColors.textPrimary,
+              ),
+              decoration: InputDecoration(
+                hintText: '게임 닉네임, 배틀태그 등',
+                hintStyle: TextStyle(color: AppColors.textMuted),
+                filled: true,
+                fillColor: AppColors.bgElevated,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.borderSubtle),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.borderSubtle),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.accentPurple),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+            ),
+
+            // 에러 메시지
+            if (_error != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.accentRed.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _error!,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    color: AppColors.accentRed,
+                  ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 24),
+
+            // 버튼
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary,
+                      side: BorderSide(color: AppColors.borderSubtle),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text('취소'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _saving ? null : _save,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: _saving
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text('저장'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1714,7 +2689,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                       padding: const EdgeInsets.all(16),
                       child: SizedBox(
                         width: double.infinity,
-                        child: Text(
+                        child: SelectableText(
                           _currentText,
                           style: TextStyle(
                             fontFamily: 'Inter',
@@ -1748,7 +2723,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
+                    child: SelectableText(
                       widget.inviteUrl,
                       style: TextStyle(
                         fontFamily: 'Inter',
@@ -1756,7 +2731,6 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                         fontWeight: FontWeight.w500,
                         color: AppColors.accentBlue,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 8),

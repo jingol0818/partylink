@@ -1,13 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/room_service.dart';
 import '../services/session_service.dart';
+import '../services/profanity_filter_service.dart';
 import '../theme/app_theme.dart';
 
 /// 링크 진입 화면 (/r/:code)
 ///
-/// 초대 링크를 통해 접속한 사용자가 닉네임을 입력하고
-/// "관전(watching)" 상태로 방에 입장합니다.
+/// 초대 링크를 통해 접속한 사용자가 자동으로 빈 슬롯에 배정됩니다.
+/// 닉네임은 기본 "사용자 N"으로 설정되며, 방에서 수정 가능합니다.
 class EnterRoomPage extends StatefulWidget {
   final String code;
   const EnterRoomPage({super.key, required this.code});
@@ -19,22 +20,71 @@ class EnterRoomPage extends StatefulWidget {
 class _EnterRoomPageState extends State<EnterRoomPage> {
   final _svc = RoomService();
   final _nameCtrl = TextEditingController();
-  final _tagCtrl = TextEditingController();
-  bool _loading = false;
+  final _inviteIdCtrl = TextEditingController();
+  bool _loading = true;
+  bool _joining = false;
   String? _error;
+  String? _roomName;
+  String? _gameName;
+  int? _currentMembers;
+  int? _maxMembers;
 
-  // ─── 입장 처리 ────────────────────────────────────────
+  @override
+  void initState() {
+    super.initState();
+    _loadRoomInfo();
+  }
+
+  // ─── 방 정보 로드 ────────────────────────────────────────
+
+  Future<void> _loadRoomInfo() async {
+    try {
+      final room = await _svc.getRoomByCode(widget.code);
+
+      if (!room.isOpen) {
+        setState(() {
+          _error = '이 방은 마감되었거나 만료되었어요.';
+          _loading = false;
+        });
+        return;
+      }
+
+      // 참여 인원 수 조회
+      final members = await _svc.listMembers(room.id);
+      final joinedCount = members.where((m) => m.isJoined).length;
+
+      // 기본 닉네임 설정
+      final nextUserNum = await _svc.getNextUserNumber(room.id);
+      _nameCtrl.text = '사용자 $nextUserNum';
+
+      setState(() {
+        _roomName = room.roomName;
+        _gameName = room.gameKey;
+        _currentMembers = joinedCount;
+        _maxMembers = room.maxMembers;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = '방을 찾지 못했어요. 코드가 맞는지 확인해주세요.';
+        _loading = false;
+      });
+    }
+  }
+
+  // ─── 입장 처리 (자동 슬롯 배정) ─────────────────────────────
 
   Future<void> _enter() async {
     // 닉네임 유효성 검사
     final name = _nameCtrl.text.trim();
-    if (name.isEmpty) {
-      setState(() => _error = '닉네임을 입력해주세요.');
+    final nameError = ProfanityFilterService.validateNickname(name);
+    if (nameError != null) {
+      setState(() => _error = nameError);
       return;
     }
 
     setState(() {
-      _loading = true;
+      _joining = true;
       _error = null;
     });
 
@@ -48,12 +98,34 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
         return;
       }
 
-      // watching 상태로 입장
-      final tag = _tagCtrl.text.trim();
-      final memberId = await _svc.enterAsWatching(
+      // 빈 슬롯 찾기
+      final emptySlot = await _svc.findEmptySlot(room.id);
+
+      if (emptySlot == null) {
+        // 빈 슬롯 없으면 관전자로 입장
+        final inviteId = _inviteIdCtrl.text.trim();
+        final memberId = await _svc.enterAsWatching(
+          roomId: room.id,
+          displayName: name,
+          inviteId: inviteId.isEmpty ? null : inviteId,
+          sessionId: SessionService.sessionId,
+        );
+
+        SessionService.setMemberId(memberId);
+
+        if (!mounted) return;
+        context.go('/room/${widget.code}');
+        return;
+      }
+
+      // 빈 슬롯에 바로 참여
+      final inviteId = _inviteIdCtrl.text.trim();
+      final memberId = await _svc.enterAndJoinSlot(
         roomId: room.id,
         displayName: name,
-        tag: tag.isEmpty ? null : tag,
+        role: emptySlot,
+        inviteId: inviteId.isEmpty ? null : inviteId,
+        sessionId: SessionService.sessionId,
       );
 
       // 세션에 memberId 저장
@@ -62,9 +134,52 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
       if (!mounted) return;
       context.go('/room/${widget.code}');
     } catch (e) {
-      setState(() => _error = '방을 찾지 못했어요. 코드가 맞는지 확인해주세요.');
+      setState(() => _error = '입장 중 오류가 발생했어요. 다시 시도해주세요.');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _joining = false);
+    }
+  }
+
+  // ─── 관전자로 입장 ─────────────────────────────────────────
+
+  Future<void> _enterAsWatcher() async {
+    // 닉네임 유효성 검사
+    final name = _nameCtrl.text.trim();
+    final nameError = ProfanityFilterService.validateNickname(name);
+    if (nameError != null) {
+      setState(() => _error = nameError);
+      return;
+    }
+
+    setState(() {
+      _joining = true;
+      _error = null;
+    });
+
+    try {
+      final room = await _svc.getRoomByCode(widget.code);
+
+      if (!room.isOpen) {
+        setState(() => _error = '이 방은 마감되었거나 만료되었어요.');
+        return;
+      }
+
+      final inviteId = _inviteIdCtrl.text.trim();
+      final memberId = await _svc.enterAsWatching(
+        roomId: room.id,
+        displayName: name,
+        inviteId: inviteId.isEmpty ? null : inviteId,
+        sessionId: SessionService.sessionId,
+      );
+
+      SessionService.setMemberId(memberId);
+
+      if (!mounted) return;
+      context.go('/room/${widget.code}');
+    } catch (e) {
+      setState(() => _error = '입장 중 오류가 발생했어요. 다시 시도해주세요.');
+    } finally {
+      if (mounted) setState(() => _joining = false);
     }
   }
 
@@ -73,7 +188,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _tagCtrl.dispose();
+    _inviteIdCtrl.dispose();
     super.dispose();
   }
 
@@ -86,7 +201,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
       appBar: AppBar(
         backgroundColor: AppColors.bgPage,
         title: Text(
-          '입장: ${widget.code}',
+          _roomName ?? '입장: ${widget.code}',
           style: TextStyle(
             fontFamily: 'Inter',
             fontSize: 20,
@@ -95,132 +210,278 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
           ),
         ),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // 입장 카드
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgCard,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    children: [
-                      // 안내 메시지
-                      Icon(
-                        Icons.info_outline,
-                        size: 32,
-                        color: AppColors.accentPurple,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        '입장만으로는 자리가 확정되지 않아요.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '방에 들어간 뒤 "참여하기"를 눌러야 자리 확정!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+      body: _loading ? _buildLoading() : _buildContent(),
+    );
+  }
 
-                      // 닉네임 입력
-                      _buildInputField(
-                        controller: _nameCtrl,
-                        label: '닉네임',
-                        hint: '닉네임을 입력하세요',
-                        textInputAction: TextInputAction.next,
+  Widget _buildLoading() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: AppColors.accentPurple),
+          const SizedBox(height: 16),
+          Text(
+            '방 정보를 불러오는 중...',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 방 정보 카드
+              if (_roomName != null || _gameName != null) ...[
+                _buildRoomInfoCard(),
+                const SizedBox(height: 16),
+              ],
+
+              // 입장 카드
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.bgCard,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    // 안내 메시지
+                    Icon(
+                      Icons.login,
+                      size: 32,
+                      color: AppColors.accentPurple,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '입장하면 자동으로 빈 자리에 배정돼요',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '닉네임과 초대 정보는 방에서 수정 가능해요',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // 닉네임 입력
+                    _buildInputField(
+                      controller: _nameCtrl,
+                      label: '닉네임',
+                      hint: '닉네임을 입력하세요',
+                      maxLength: 20,
+                      textInputAction: TextInputAction.next,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 초대 방법 입력 (선택)
+                    _buildInputField(
+                      controller: _inviteIdCtrl,
+                      label: '초대 방법 (선택)',
+                      hint: '게임 닉네임, 배틀태그 등',
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _enter(),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '예: Hide on bush#KR1, 닉네임#1234',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 에러 메시지
+                    if (_error != null) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentRed.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _error!,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 14,
+                            color: AppColors.accentRed,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
+                    ],
 
-                      // 태그 입력 (선택)
-                      _buildInputField(
-                        controller: _tagCtrl,
-                        label: '태그 (선택)',
-                        hint: '#KR1',
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => _enter(),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // 에러 메시지
-                      if (_error != null) ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentRed.withOpacity(0.1),
+                    // 입장 버튼
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _joining ? null : _enter,
+                        icon: _joining
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.bgPage,
+                                ),
+                              )
+                            : Icon(Icons.login, size: 20),
+                        label: Text(_joining ? '입장 중...' : '입장하기'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accentPurple,
+                          foregroundColor: AppColors.bgPage,
+                          disabledBackgroundColor:
+                              AppColors.accentPurple.withOpacity(0.5),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(
-                            _error!,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 14,
-                              color: AppColors.accentRed,
-                            ),
+                          textStyle: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                      ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
-                      // 입장 버튼
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _loading ? null : _enter,
-                          icon: _loading
-                              ? SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.bgPage,
-                                  ),
-                                )
-                              : Icon(Icons.visibility, size: 20),
-                          label: Text(_loading ? '입장 중...' : '관전으로 입장'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accentPurple,
-                            foregroundColor: AppColors.bgPage,
-                            disabledBackgroundColor: AppColors.accentPurple.withOpacity(0.5),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            textStyle: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                    // 관전 입장 버튼
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _joining ? null : _enterAsWatcher,
+                        icon: Icon(Icons.visibility, size: 20),
+                        label: Text('관전으로 입장'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          side: BorderSide(color: AppColors.borderSubtle),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          textStyle: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoomInfoCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_roomName != null) ...[
+            Text(
+              _roomName!,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          Row(
+            children: [
+              if (_gameName != null) ...[
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentPurple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _gameName!,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.accentPurple,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(width: 8),
+              if (_currentMembers != null && _maxMembers != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgInput,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.people,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$_currentMembers / $_maxMembers',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -229,6 +490,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
     required TextEditingController controller,
     required String label,
     required String hint,
+    int? maxLength,
     TextInputAction? textInputAction,
     void Function(String)? onSubmitted,
   }) {
@@ -249,6 +511,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
           controller: controller,
           textInputAction: textInputAction,
           onSubmitted: onSubmitted,
+          maxLength: maxLength,
           style: TextStyle(
             fontFamily: 'Inter',
             fontSize: 16,
@@ -263,7 +526,9 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
             ),
             filled: true,
             fillColor: AppColors.bgInput,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            counterText: '',
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: AppColors.borderSubtle),
