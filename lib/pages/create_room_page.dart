@@ -377,8 +377,9 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
               onTap: () => _onGameSelected(game),
               child: Container(
                 width: 100,
+                height: 100, // 고정 높이로 통일
                 padding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.accentPurple.withOpacity(0.15)
@@ -391,19 +392,23 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                   ),
                 ),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       game.icon,
                       style: const TextStyle(fontSize: 32),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       game.name,
                       textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'Inter',
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w500,
+                        height: 1.2,
                         color: isSelected
                             ? AppColors.accentPurple
                             : AppColors.textPrimary,
@@ -614,7 +619,8 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
           },
           child: Container(
             width: 140,
-            padding: const EdgeInsets.all(16),
+            height: 80, // 고정 높이로 통일
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isSelected
                   ? AppColors.accentPurple.withOpacity(0.15)
@@ -628,6 +634,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   goal.name,
@@ -643,9 +650,12 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                 const SizedBox(height: 4),
                 Text(
                   goal.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11,
+                    height: 1.2,
                     color: AppColors.textSecondary,
                   ),
                 ),
