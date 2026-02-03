@@ -176,7 +176,7 @@ class HomePage extends StatelessWidget {
                 children: [
                   // 카피라이트
                   Text(
-                    '© 2025 PartyLink. All rights reserved.',
+                    '© 2026 PartyLink. All rights reserved.',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 12,
