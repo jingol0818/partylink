@@ -80,27 +80,12 @@ class HomePage extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // 아이콘
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Transform.translate(
-                              offset: const Offset(8, 0),
-                              child: Icon(
-                                Icons.person,
-                                size: 56,
-                                color: accentPurple,
-                              ),
-                            ),
-                            Transform.translate(
-                              offset: const Offset(-8, 0),
-                              child: Icon(
-                                Icons.person,
-                                size: 56,
-                                color: accentPurple,
-                              ),
-                            ),
-                          ],
+                        // 로고 이미지
+                        Image.asset(
+                          'assets/images/logo.png',
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.contain,
                         ),
                         const SizedBox(height: 24),
 
