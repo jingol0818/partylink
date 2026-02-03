@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 
@@ -166,6 +167,45 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
+
+              // 하단 푸터
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 카피라이트
+                  Text(
+                    '© 2025 PartyLink. All rights reserved.',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: textSecondary,
+                    ),
+                  ),
+                  // 개발자 응원하기 버튼
+                  TextButton.icon(
+                    onPressed: () async {
+                      final url = Uri.parse('https://ctee.kr/place/sge');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    icon: Icon(Icons.favorite, size: 16, color: accentPurple),
+                    label: Text(
+                      '개발자 응원하기',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: accentPurple,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
