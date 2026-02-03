@@ -293,7 +293,7 @@ class _RoomPageState extends State<RoomPage> {
         title: Text(
           '슬롯 이동',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
@@ -301,7 +301,7 @@ class _RoomPageState extends State<RoomPage> {
         content: Text(
           '$fromRole에서 $toRole(으)로 이동할까요?',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             color: AppColors.textSecondary,
           ),
         ),
@@ -432,7 +432,7 @@ class _RoomPageState extends State<RoomPage> {
         title: Text(
           '방 나가기',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
@@ -440,7 +440,7 @@ class _RoomPageState extends State<RoomPage> {
         content: Text(
           '정말 이 방을 나갈까요?',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             color: AppColors.textSecondary,
           ),
         ),
@@ -484,7 +484,7 @@ class _RoomPageState extends State<RoomPage> {
         title: Text(
           '방 나가기',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
@@ -492,7 +492,7 @@ class _RoomPageState extends State<RoomPage> {
         content: Text(
           '뒤로 가면 방에서 나가게 돼요. 나갈까요?',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             color: AppColors.textSecondary,
           ),
         ),
@@ -640,7 +640,7 @@ class _RoomPageState extends State<RoomPage> {
               child: Text(
                 badge > 99 ? '99+' : '$badge',
                 style: const TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -693,7 +693,7 @@ class _RoomPageState extends State<RoomPage> {
           Text(
             '방을 불러올 수 없어요',
             style: TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Pretendard',
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
@@ -703,7 +703,7 @@ class _RoomPageState extends State<RoomPage> {
           Text(
             _error ?? '',
             style: TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Pretendard',
               fontSize: 14,
               color: AppColors.textSecondary,
             ),
@@ -827,7 +827,7 @@ class _RoomPageState extends State<RoomPage> {
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -840,7 +840,7 @@ class _RoomPageState extends State<RoomPage> {
                 Tooltip(
                   message: '방 설정',
                   textStyle: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 12,
                     color: AppColors.textPrimary,
                   ),
@@ -862,7 +862,7 @@ class _RoomPageState extends State<RoomPage> {
               Tooltip(
                 message: _showChat ? '채팅 닫기' : '채팅 열기',
                 textStyle: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 12,
                   color: AppColors.textPrimary,
                 ),
@@ -891,7 +891,7 @@ class _RoomPageState extends State<RoomPage> {
               Tooltip(
                 message: '방 나가기',
                 textStyle: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 12,
                   color: AppColors.textPrimary,
                 ),
@@ -940,7 +940,7 @@ class _RoomPageState extends State<RoomPage> {
                 Text(
                   '모두 준비 완료!',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -949,7 +949,7 @@ class _RoomPageState extends State<RoomPage> {
                 Text(
                   '게임을 시작하세요 🎮',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 14,
                     color: AppColors.textSecondary,
                   ),
@@ -1005,7 +1005,7 @@ class _RoomPageState extends State<RoomPage> {
                   Text(
                     '채팅',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -1029,7 +1029,7 @@ class _RoomPageState extends State<RoomPage> {
                       child: Text(
                         '아직 메시지가 없어요',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          fontFamily: 'Pretendard',
                           color: AppColors.textMuted,
                         ),
                       ),
@@ -1059,14 +1059,14 @@ class _RoomPageState extends State<RoomPage> {
                       child: TextField(
                         controller: _chatController,
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          fontFamily: 'Pretendard',
                           fontSize: 14,
                           color: AppColors.textPrimary,
                         ),
                         decoration: InputDecoration(
                           hintText: '메시지 입력...',
                           hintStyle: TextStyle(
-                            fontFamily: 'Inter',
+                            fontFamily: 'Pretendard',
                             color: AppColors.textMuted,
                           ),
                           filled: true,
@@ -1156,7 +1156,7 @@ class _RoomPageState extends State<RoomPage> {
                   Text(
                     '채팅',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -1187,7 +1187,7 @@ class _RoomPageState extends State<RoomPage> {
                             Text(
                               '아직 메시지가 없어요',
                               style: TextStyle(
-                                fontFamily: 'Inter',
+                                fontFamily: 'Pretendard',
                                 color: AppColors.textMuted,
                               ),
                             ),
@@ -1218,14 +1218,14 @@ class _RoomPageState extends State<RoomPage> {
                     child: TextField(
                       controller: _chatController,
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 14,
                         color: AppColors.textPrimary,
                       ),
                       decoration: InputDecoration(
                         hintText: '메시지 입력...',
                         hintStyle: TextStyle(
-                          fontFamily: 'Inter',
+                          fontFamily: 'Pretendard',
                           color: AppColors.textMuted,
                         ),
                         filled: true,
@@ -1303,7 +1303,7 @@ class _RoomPageState extends State<RoomPage> {
                         child: Text(
                           msg.senderName,
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            fontFamily: 'Pretendard',
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: AppColors.accentPurple,
@@ -1313,7 +1313,7 @@ class _RoomPageState extends State<RoomPage> {
                     SelectableText(
                       msg.content,
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 14,
                         color: isMe ? Colors.white : AppColors.textPrimary,
                       ),
@@ -1361,7 +1361,7 @@ class _RoomPageState extends State<RoomPage> {
                     Text(
                       game?.name ?? room.gameKey.toUpperCase(),
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -1372,7 +1372,7 @@ class _RoomPageState extends State<RoomPage> {
                           ? '${mode.name} · ${goal?.name ?? room.goal}'
                           : goal?.name ?? room.goal,
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textSecondary,
@@ -1398,7 +1398,7 @@ class _RoomPageState extends State<RoomPage> {
                       Text(
                         '방장',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          fontFamily: 'Pretendard',
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppColors.accentOrange,
@@ -1416,7 +1416,7 @@ class _RoomPageState extends State<RoomPage> {
               Text(
                 '$_joinedCount/${room.maxMembers}',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -1452,7 +1452,7 @@ class _RoomPageState extends State<RoomPage> {
           Text(
             text,
             style: TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Pretendard',
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: AppColors.textPrimary,
@@ -1521,7 +1521,7 @@ class _RoomPageState extends State<RoomPage> {
           Text(
             '슬롯 현황',
             style: TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Pretendard',
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
@@ -1559,7 +1559,7 @@ class _RoomPageState extends State<RoomPage> {
               child: Text(
                 role,
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -1579,7 +1579,7 @@ class _RoomPageState extends State<RoomPage> {
                                   Text(
                                     member.displayName,
                                     style: TextStyle(
-                                      fontFamily: 'Inter',
+                                      fontFamily: 'Pretendard',
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                       color: AppColors.textPrimary,
@@ -1596,7 +1596,7 @@ class _RoomPageState extends State<RoomPage> {
                                       child: Text(
                                         'ME',
                                         style: TextStyle(
-                                          fontFamily: 'Inter',
+                                          fontFamily: 'Pretendard',
                                           fontSize: 10,
                                           fontWeight: FontWeight.w600,
                                           color: Colors.white,
@@ -1614,7 +1614,7 @@ class _RoomPageState extends State<RoomPage> {
                                       child: SelectableText(
                                         member.inviteId!,
                                         style: TextStyle(
-                                          fontFamily: 'Inter',
+                                          fontFamily: 'Pretendard',
                                           fontSize: 12,
                                           color: AppColors.textSecondary,
                                         ),
@@ -1643,7 +1643,7 @@ class _RoomPageState extends State<RoomPage> {
                   : Text(
                       '참여하기',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: _canChangeSlot ? AppColors.accentPurple : AppColors.textMuted,
@@ -1662,7 +1662,7 @@ class _RoomPageState extends State<RoomPage> {
                   Text(
                     member.ready ? 'Ready' : '준비 중',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: member.ready ? AppColors.accentGreen : AppColors.textSecondary,
@@ -1699,7 +1699,7 @@ class _RoomPageState extends State<RoomPage> {
             child: Text(
               '이 방은 마감되었거나 만료되었어요.',
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 14,
                 color: AppColors.accentOrange,
               ),
@@ -1729,7 +1729,7 @@ class _RoomPageState extends State<RoomPage> {
               Text(
                 '내 상태',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -1745,7 +1745,7 @@ class _RoomPageState extends State<RoomPage> {
                 child: Text(
                   _stateToKorean(me?.state),
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: me?.isJoined == true ? AppColors.accentPurple : AppColors.textSecondary,
@@ -1761,7 +1761,7 @@ class _RoomPageState extends State<RoomPage> {
                   label: Text(
                     '수정',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 12,
                       color: AppColors.accentPurple,
                     ),
@@ -1781,7 +1781,7 @@ class _RoomPageState extends State<RoomPage> {
             Text(
               '세션이 없어요. 링크로 다시 입장해주세요.',
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 13,
                 color: AppColors.textSecondary,
               ),
@@ -1794,7 +1794,7 @@ class _RoomPageState extends State<RoomPage> {
                 Text(
                   'Ready',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textPrimary,
@@ -1811,7 +1811,7 @@ class _RoomPageState extends State<RoomPage> {
             Text(
               '슬롯을 선택해서 파티에 참여하세요.',
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 13,
                 color: AppColors.textSecondary,
               ),
@@ -1960,7 +1960,7 @@ class _HostSettingsDialogState extends State<_HostSettingsDialog> {
                   Text(
                     '방 설정',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -1979,7 +1979,7 @@ class _HostSettingsDialogState extends State<_HostSettingsDialog> {
               Text(
                 '팀 수',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textSecondary,
@@ -2004,7 +2004,7 @@ class _HostSettingsDialogState extends State<_HostSettingsDialog> {
                     child: Text(
                       '$_teamCount',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -2029,7 +2029,7 @@ class _HostSettingsDialogState extends State<_HostSettingsDialog> {
               Text(
                 '팀당 인원',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textSecondary,
@@ -2054,7 +2054,7 @@ class _HostSettingsDialogState extends State<_HostSettingsDialog> {
                     child: Text(
                       '$_membersPerTeam',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -2075,7 +2075,7 @@ class _HostSettingsDialogState extends State<_HostSettingsDialog> {
                   Text(
                     '총 $totalSlots명',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 14,
                       color: AppColors.textSecondary,
                     ),
@@ -2090,7 +2090,7 @@ class _HostSettingsDialogState extends State<_HostSettingsDialog> {
                   Text(
                     '마이크 필수',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textSecondary,
@@ -2112,7 +2112,7 @@ class _HostSettingsDialogState extends State<_HostSettingsDialog> {
                   Text(
                     '슬롯 이름 직접 설정',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textSecondary,
@@ -2136,7 +2136,7 @@ class _HostSettingsDialogState extends State<_HostSettingsDialog> {
                     child: TextField(
                       controller: _slotControllers[i],
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 14,
                         color: AppColors.textPrimary,
                       ),
@@ -2297,7 +2297,7 @@ class _EditMyInfoDialogState extends State<_EditMyInfoDialog> {
                 Text(
                   '내 정보 수정',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -2316,7 +2316,7 @@ class _EditMyInfoDialogState extends State<_EditMyInfoDialog> {
             Text(
               '닉네임',
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
@@ -2327,7 +2327,7 @@ class _EditMyInfoDialogState extends State<_EditMyInfoDialog> {
               controller: _nameCtrl,
               maxLength: 20,
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 16,
                 color: AppColors.textPrimary,
               ),
@@ -2358,7 +2358,7 @@ class _EditMyInfoDialogState extends State<_EditMyInfoDialog> {
             Text(
               '초대 방법 (선택)',
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
@@ -2368,7 +2368,7 @@ class _EditMyInfoDialogState extends State<_EditMyInfoDialog> {
             TextField(
               controller: _inviteIdCtrl,
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 16,
                 color: AppColors.textPrimary,
               ),
@@ -2406,7 +2406,7 @@ class _EditMyInfoDialogState extends State<_EditMyInfoDialog> {
                 child: Text(
                   _error!,
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 14,
                     color: AppColors.accentRed,
                   ),
@@ -2532,7 +2532,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                 Text(
                   '초대 공유',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -2563,7 +2563,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
             Text(
               '템플릿',
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
@@ -2591,7 +2591,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                         child: Text(
                           t.name,
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            fontFamily: 'Pretendard',
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                             color: isSelected ? Colors.white : AppColors.textPrimary,
@@ -2611,7 +2611,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                 Text(
                   _isEditing ? '메시지 편집' : '메시지 미리보기',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
@@ -2648,7 +2648,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                           Text(
                             _isEditing ? '미리보기' : '편집',
                             style: TextStyle(
-                              fontFamily: 'Inter',
+                              fontFamily: 'Pretendard',
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                               color: _isEditing ? AppColors.accentPurple : AppColors.textSecondary,
@@ -2675,7 +2675,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                       controller: _editController,
                       maxLines: null,
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 13,
                         color: AppColors.textPrimary,
                         height: 1.5,
@@ -2692,7 +2692,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                         child: SelectableText(
                           _currentText,
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            fontFamily: 'Pretendard',
                             fontSize: 13,
                             color: AppColors.textPrimary,
                             height: 1.5,
@@ -2707,7 +2707,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
             Text(
               '초대 링크',
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
@@ -2726,7 +2726,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                     child: SelectableText(
                       widget.inviteUrl,
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: AppColors.accentBlue,
@@ -2776,7 +2776,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                     child: Text(
                       '닫기',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -2801,7 +2801,7 @@ class _InviteShareDialogState extends State<_InviteShareDialog> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       textStyle: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -2857,7 +2857,7 @@ class _ActionButton extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: isPrimary ? Colors.white : AppColors.textPrimary,

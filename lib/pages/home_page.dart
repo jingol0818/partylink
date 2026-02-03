@@ -40,8 +40,8 @@ class HomePage extends StatelessWidget {
                   Text(
                     'PartyLink',
                     style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 20,
+                      fontFamily: 'Outfit',
+                      fontSize: 22,
                       fontWeight: FontWeight.w700,
                       color: textPrimary,
                     ),
@@ -95,9 +95,9 @@ class HomePage extends StatelessWidget {
                         Text(
                           '링크로 파티 모으기',
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            fontFamily: 'Pretendard',
                             fontSize: 28,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w800,
                             color: textPrimary,
                           ),
                         ),
@@ -108,7 +108,7 @@ class HomePage extends StatelessWidget {
                           '방을 만들고, 링크를 공유하고, 파티원을 모아보세요.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            fontFamily: 'Pretendard',
                             fontSize: 15,
                             color: textSecondary,
                           ),
@@ -131,7 +131,7 @@ class HomePage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               textStyle: const TextStyle(
-                                fontFamily: 'Inter',
+                                fontFamily: 'Pretendard',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -156,7 +156,7 @@ class HomePage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               textStyle: const TextStyle(
-                                fontFamily: 'Inter',
+                                fontFamily: 'Pretendard',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -178,7 +178,7 @@ class HomePage extends StatelessWidget {
                   Text(
                     '© 2026 PartyLink. All rights reserved.',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 12,
                       color: textSecondary,
                     ),
@@ -195,7 +195,7 @@ class HomePage extends StatelessWidget {
                     label: Text(
                       '개발자 응원하기',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: accentPurple,

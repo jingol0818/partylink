@@ -214,7 +214,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                             child: Text(
                               _error!,
                               style: TextStyle(
-                                fontFamily: 'Inter',
+                                fontFamily: 'Pretendard',
                                 fontSize: 14,
                                 color: AppColors.accentRed,
                               ),
@@ -249,7 +249,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               textStyle: TextStyle(
-                                fontFamily: 'Inter',
+                                fontFamily: 'Pretendard',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -281,7 +281,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
           Text(
             '방 만들기',
             style: TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Pretendard',
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
@@ -324,7 +324,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     return Text(
       title,
       style: TextStyle(
-        fontFamily: 'Inter',
+        fontFamily: 'Pretendard',
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
@@ -338,7 +338,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
       controller: _roomNameController,
       maxLength: 20,
       style: TextStyle(
-        fontFamily: 'Inter',
+        fontFamily: 'Pretendard',
         color: AppColors.textPrimary,
       ),
       decoration: InputDecoration(
@@ -405,7 +405,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                         height: 1.2,
@@ -440,7 +440,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                 Text(
                   '다른 게임 추가 요청',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textSecondary,
@@ -464,7 +464,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
         title: Text(
           '게임 추가 요청',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
@@ -476,7 +476,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
             Text(
               '추가를 원하는 게임 이름을 입력해주세요.',
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 14,
                 color: AppColors.textSecondary,
               ),
@@ -485,7 +485,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
             TextField(
               controller: controller,
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 color: AppColors.textPrimary,
               ),
               decoration: InputDecoration(
@@ -572,7 +572,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                       Text(
                         mode.name,
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          fontFamily: 'Pretendard',
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: isSelected
@@ -584,7 +584,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                       Text(
                         '${mode.teamCount > 1 ? "${mode.teamCount}팀 × " : ""}${mode.membersPerTeam}인',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          fontFamily: 'Pretendard',
                           fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
@@ -639,7 +639,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                 Text(
                   goal.name,
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: isSelected
@@ -653,7 +653,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 11,
                     height: 1.2,
                     color: AppColors.textSecondary,
@@ -685,7 +685,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
               Text(
                 '팀 수',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 14,
                   color: AppColors.textPrimary,
                 ),
@@ -703,7 +703,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                     child: Text(
                       '$_teamCount',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -728,7 +728,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
               Text(
                 '팀당 인원',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Pretendard',
                   fontSize: 14,
                   color: AppColors.textPrimary,
                 ),
@@ -746,7 +746,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                     child: Text(
                       '$_membersPerTeam',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -779,7 +779,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                 Text(
                   '총 $_maxMembers명',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Pretendard',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -849,7 +849,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                       Text(
                         _selectedGame!.name,
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          fontFamily: 'Pretendard',
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -860,7 +860,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                             ? '${_selectedMode!.name} · ${_selectedGoal?.name ?? ''}'
                             : _selectedGoal?.name ?? '',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          fontFamily: 'Pretendard',
                           fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
@@ -890,7 +890,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                     Text(
                       '마이크 필요',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -900,7 +900,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                     Text(
                       '파티원에게 마이크 사용을 요구합니다',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 12,
                         color: AppColors.textSecondary,
                       ),

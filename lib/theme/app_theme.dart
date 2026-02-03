@@ -141,7 +141,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: textPrimary,
@@ -164,7 +164,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(12),
           ),
           textStyle: const TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -179,7 +179,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(12),
           ),
           textStyle: const TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
@@ -201,11 +201,11 @@ class AppTheme {
           borderSide: BorderSide(color: accentPurple, width: 2),
         ),
         labelStyle: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           color: textSecondary,
         ),
         hintStyle: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           color: textMuted,
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -227,73 +227,73 @@ class AppTheme {
       ),
       textTheme: TextTheme(
         headlineLarge: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 28,
           fontWeight: FontWeight.w700,
           color: textPrimary,
         ),
         headlineMedium: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 24,
           fontWeight: FontWeight.w700,
           color: textPrimary,
         ),
         headlineSmall: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: textPrimary,
         ),
         titleLarge: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         titleMedium: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         titleSmall: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         bodyLarge: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 16,
           fontWeight: FontWeight.w400,
           color: textPrimary,
         ),
         bodyMedium: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 14,
           fontWeight: FontWeight.w400,
           color: textSecondary,
         ),
         bodySmall: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 12,
           fontWeight: FontWeight.w400,
           color: textSecondary,
         ),
         labelLarge: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: textPrimary,
         ),
         labelMedium: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 12,
           fontWeight: FontWeight.w500,
           color: textSecondary,
         ),
         labelSmall: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 11,
           fontWeight: FontWeight.w500,
           color: textTertiary,
@@ -306,7 +306,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: bgCard,
         contentTextStyle: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           color: textPrimary,
         ),
         shape: RoundedRectangleBorder(
@@ -320,7 +320,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(24),
         ),
         titleTextStyle: TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Pretendard',
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: textPrimary,

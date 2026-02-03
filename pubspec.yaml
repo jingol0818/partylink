@@ -27,3 +27,26 @@ flutter:
   assets:
     - .env
     - assets/images/
+  fonts:
+    # 메인 한글/영문 폰트 - Pretendard (본문, UI 전반)
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Regular.otf
+          weight: 400
+        - asset: assets/fonts/Pretendard-Medium.otf
+          weight: 500
+        - asset: assets/fonts/Pretendard-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/Pretendard-Bold.otf
+          weight: 700
+    # 숫자/영문 강조용 - Outfit (제목, 숫자, 브랜딩)
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Outfit-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Outfit-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Outfit-Bold.ttf
+          weight: 700

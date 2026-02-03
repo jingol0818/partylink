@@ -203,7 +203,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
         title: Text(
           _roomName ?? '입장: ${widget.code}',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -224,7 +224,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
           Text(
             '방 정보를 불러오는 중...',
             style: TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Pretendard',
               fontSize: 14,
               color: AppColors.textSecondary,
             ),
@@ -270,7 +270,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
                       '입장하면 자동으로 빈 자리에 배정돼요',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textPrimary,
@@ -281,7 +281,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
                       '닉네임과 초대 정보는 방에서 수정 가능해요',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 14,
                         color: AppColors.textSecondary,
                       ),
@@ -310,7 +310,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
                     Text(
                       '예: Hide on bush#KR1, 닉네임#1234',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 12,
                         color: AppColors.textMuted,
                       ),
@@ -329,7 +329,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
                         child: Text(
                           _error!,
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            fontFamily: 'Pretendard',
                             fontSize: 14,
                             color: AppColors.accentRed,
                           ),
@@ -364,7 +364,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           textStyle: TextStyle(
-                            fontFamily: 'Inter',
+                            fontFamily: 'Pretendard',
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -388,7 +388,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           textStyle: TextStyle(
-                            fontFamily: 'Inter',
+                            fontFamily: 'Pretendard',
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -421,7 +421,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
             Text(
               _roomName!,
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -442,7 +442,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
                   child: Text(
                     _gameName!,
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: AppColors.accentPurple,
@@ -471,7 +471,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
                       Text(
                         '$_currentMembers / $_maxMembers',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          fontFamily: 'Pretendard',
                           fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
@@ -500,7 +500,7 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
         Text(
           label,
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.textSecondary,
@@ -513,14 +513,14 @@ class _EnterRoomPageState extends State<EnterRoomPage> {
           onSubmitted: onSubmitted,
           maxLength: maxLength,
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             fontSize: 16,
             color: AppColors.textPrimary,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Pretendard',
               fontSize: 16,
               color: AppColors.textMuted,
             ),

@@ -113,7 +113,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
           Text(
             '방 찾기',
             style: TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Pretendard',
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
@@ -164,7 +164,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
               controller: _searchController,
               onSubmitted: _onSearch,
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 color: AppColors.textPrimary,
               ),
               decoration: InputDecoration(
@@ -272,7 +272,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
                   Text(
                     '빈 방만',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: _hideFullRooms ? AppColors.accentPurple : AppColors.textSecondary,
@@ -336,7 +336,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
         child: Text(
           label,
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Pretendard',
             fontSize: 13,
             fontWeight: FontWeight.w500,
             color: isSelected ? AppColors.bgPage : AppColors.textPrimary,
@@ -361,7 +361,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
             Text(
               _error!,
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 color: AppColors.accentRed,
               ),
             ),
@@ -393,7 +393,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
             Text(
               _searchController.text.isNotEmpty ? '검색 결과가 없어요' : '열린 방이 없어요',
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: AppColors.textSecondary,
@@ -403,7 +403,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
             Text(
               '직접 방을 만들어보세요!',
               style: TextStyle(
-                fontFamily: 'Inter',
+                fontFamily: 'Pretendard',
                 fontSize: 14,
                 color: AppColors.textMuted,
               ),
@@ -500,7 +500,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
     return Tooltip(
       message: tooltipMessage,
       textStyle: TextStyle(
-        fontFamily: 'Inter',
+        fontFamily: 'Pretendard',
         fontSize: 12,
         color: AppColors.textPrimary,
         height: 1.4,
@@ -538,7 +538,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
                   Text(
                     room.roomName!,
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      fontFamily: 'Pretendard',
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -562,7 +562,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
                           Text(
                             game?.name ?? room.gameKey.toUpperCase(),
                             style: TextStyle(
-                              fontFamily: 'Inter',
+                              fontFamily: 'Pretendard',
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -573,7 +573,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
                             Text(
                               mode.name,
                               style: TextStyle(
-                                fontFamily: 'Inter',
+                                fontFamily: 'Pretendard',
                                 fontSize: 10,
                                 color: AppColors.textSecondary,
                               ),
@@ -592,7 +592,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
                       child: Text(
                         goal?.name ?? room.goal,
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          fontFamily: 'Pretendard',
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: _getGoalColor(room.goal),
@@ -616,7 +616,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
                     Text(
                       '${roomWithCount.joinedCount}/${room.maxMembers}',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: isFull ? AppColors.accentRed : AppColors.accentGreen,
@@ -639,7 +639,7 @@ class _BrowseRoomsPageState extends State<BrowseRoomsPage> {
                     Text(
                       _formatRemainingTime(room.expiresAt),
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Pretendard',
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
                         color: timeColor,
