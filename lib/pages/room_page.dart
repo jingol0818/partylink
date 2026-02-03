@@ -801,14 +801,14 @@ class _RoomPageState extends State<RoomPage> {
     // 방 이름 또는 기본 타이틀
     final title = _room?.roomName ?? '파티 #${widget.code}';
 
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 8 : 24,
-        vertical: 8,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16 : 24,
+            vertical: 8,
+          ),
           child: Row(
             children: [
               // 뒤로가기 버튼
@@ -1571,68 +1571,69 @@ class _RoomPageState extends State<RoomPage> {
                   ? Row(
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    member.displayName,
+                              // 닉네임
+                              Text(
+                                member.displayName,
+                                style: TextStyle(
+                                  fontFamily: 'Pretendard',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              if (isMe) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accentPurple,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    'ME',
                                     style: TextStyle(
                                       fontFamily: 'Pretendard',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textPrimary,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
                                     ),
                                   ),
-                                  if (isMe) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.accentPurple,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        'ME',
-                                        style: TextStyle(
-                                          fontFamily: 'Pretendard',
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
+                                ),
+                              ],
+                              // 게임ID/배틀태그 (가로 배치)
                               if (member.inviteId != null && member.inviteId!.isNotEmpty) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: SelectableText(
-                                        member.inviteId!,
-                                        style: TextStyle(
-                                          fontFamily: 'Pretendard',
-                                          fontSize: 12,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
+                                const SizedBox(width: 12),
+                                Flexible(
+                                  child: Text(
+                                    member.inviteId!,
+                                    style: TextStyle(
+                                      fontFamily: 'Pretendard',
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
                                     ),
-                                    const SizedBox(width: 4),
-                                    GestureDetector(
-                                      onTap: () {
-                                        Clipboard.setData(ClipboardData(text: member.inviteId!));
-                                        _showSnackBar('초대 정보가 복사되었어요');
-                                      },
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      Clipboard.setData(ClipboardData(text: member.inviteId!));
+                                      _showSnackBar('게임 ID가 복사되었어요');
+                                    },
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(4),
                                       child: Icon(
-                                        Icons.copy,
-                                        size: 14,
+                                        Icons.copy_rounded,
+                                        size: 16,
                                         color: AppColors.textMuted,
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ],
                             ],
@@ -1644,7 +1645,7 @@ class _RoomPageState extends State<RoomPage> {
                       '참여하기',
                       style: TextStyle(
                         fontFamily: 'Pretendard',
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: _canChangeSlot ? AppColors.accentPurple : AppColors.textMuted,
                       ),
@@ -1655,16 +1656,16 @@ class _RoomPageState extends State<RoomPage> {
                 children: [
                   Icon(
                     member.ready ? Icons.check_circle : Icons.timer,
-                    size: 16,
+                    size: 20,
                     color: member.ready ? AppColors.accentGreen : AppColors.textSecondary,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 6),
                   Text(
                     member.ready ? 'Ready' : '준비 중',
                     style: TextStyle(
                       fontFamily: 'Pretendard',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                       color: member.ready ? AppColors.accentGreen : AppColors.textSecondary,
                     ),
                   ),
@@ -1673,7 +1674,7 @@ class _RoomPageState extends State<RoomPage> {
             else
               Icon(
                 Icons.person_add,
-                size: 20,
+                size: 24,
                 color: _canChangeSlot ? AppColors.accentPurple : AppColors.textMuted,
               ),
           ],
@@ -1757,17 +1758,18 @@ class _RoomPageState extends State<RoomPage> {
               if (me != null)
                 TextButton.icon(
                   onPressed: _showEditMyInfo,
-                  icon: Icon(Icons.edit, size: 16, color: AppColors.accentPurple),
+                  icon: Icon(Icons.edit, size: 18, color: AppColors.accentPurple),
                   label: Text(
                     '수정',
                     style: TextStyle(
                       fontFamily: 'Pretendard',
-                      fontSize: 12,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                       color: AppColors.accentPurple,
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
