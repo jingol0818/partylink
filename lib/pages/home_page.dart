@@ -80,12 +80,13 @@ class HomePage extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // 로고 이미지
+                        // 로고 이미지 (투명 배경)
                         Image.asset(
-                          'assets/images/logo.png',
-                          width: 180,
-                          height: 180,
+                          'assets/images/logo_v3.png',
+                          width: 360,
+                          height: 360,
                           fit: BoxFit.contain,
+                          filterQuality: FilterQuality.high,
                         ),
                         const SizedBox(height: 24),
 
