@@ -1,90 +1,113 @@
 import 'dart:js_interop';
-import 'package:web/web.dart' as web;
+import 'dart:async';
 
-/// 알림음 서비스 (Web Audio API 사용)
+/// JS eval 호출 (최상위 함수)
+@JS('eval')
+external JSAny? _jsEval(JSString code);
+
+/// 게임 사운드 서비스 (Web Audio API 기반)
+///
+/// JavaScript 직접 호출로 외부 파일 없이 효과음 생성
 class SoundService {
-  static web.AudioContext? _audioContext;
+  static bool _activated = false;
 
-  /// AudioContext 초기화
-  static void _initAudioContext() {
-    _audioContext ??= web.AudioContext();
+  /// 오디오 컨텍스트 활성화 (사용자 상호작용 후 1회 호출)
+  static void activate() {
+    if (_activated) return;
+    _activated = true;
+    _ensureContext();
   }
 
-  /// "띵!" 알림음 재생 (모든 사람이 준비되었을 때)
-  static Future<void> playReadySound() async {
-    try {
-      _initAudioContext();
-      final ctx = _audioContext!;
-
-      // 사용자 인터랙션 후 resume 필요할 수 있음
-      if (ctx.state == 'suspended') {
-        await ctx.resume().toDart;
+  static void _ensureContext() {
+    _jsEval('''
+      if (!window._gameAudioCtx) {
+        window._gameAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
-
-      final oscillator = ctx.createOscillator();
-      final gainNode = ctx.createGain();
-
-      // "띵!" 소리 설정
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(880.0, ctx.currentTime); // A5 음
-
-      // 볼륨 엔벨로프 (부드러운 시작과 끝)
-      gainNode.gain.setValueAtTime(0.0, ctx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-
-      // 연결
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      // 재생
-      oscillator.start(ctx.currentTime);
-      oscillator.stop(ctx.currentTime + 0.3);
-    } catch (e) {
-      // 오디오 재생 실패 시 무시 (사용자 인터랙션 필요할 수 있음)
-      print('Sound play failed: $e');
-    }
+      if (window._gameAudioCtx.state === 'suspended') {
+        window._gameAudioCtx.resume();
+      }
+    '''.toJS);
   }
 
-  /// 부드러운 알림음 (두 음의 화음)
-  static Future<void> playNotificationSound() async {
-    try {
-      _initAudioContext();
-      final ctx = _audioContext!;
+  /// 단일 톤 재생
+  static void _playTone(double freq, double duration, {double volume = 0.3, String type = 'sine'}) {
+    if (!_activated) return;
+    _jsEval('''
+      (function() {
+        var ctx = window._gameAudioCtx;
+        if (!ctx) return;
+        if (ctx.state === 'suspended') ctx.resume();
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = '$type';
+        osc.frequency.value = $freq;
+        gain.gain.value = $volume;
+        gain.gain.setValueAtTime($volume, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + $duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + $duration);
+      })()
+    '''.toJS);
+  }
 
-      if (ctx.state == 'suspended') {
-        await ctx.resume().toDart;
-      }
+  /// 매칭 완료
+  static void matchFound() {
+    _playTone(523.25, 0.15, volume: 0.25);
+    Future.delayed(const Duration(milliseconds: 150), () {
+      _playTone(659.25, 0.3, volume: 0.25);
+    });
+  }
 
-      // 첫 번째 음 (C5)
-      final osc1 = ctx.createOscillator();
-      final gain1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
-      gain1.gain.setValueAtTime(0.0, ctx.currentTime);
-      gain1.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.01);
-      gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
+  /// 메시지 수신
+  static void messageReceived() {
+    _playTone(880, 0.08, volume: 0.15);
+  }
 
-      // 두 번째 음 (E5) - 살짝 딜레이
-      final osc2 = ctx.createOscillator();
-      final gain2 = ctx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
-      gain2.gain.setValueAtTime(0.0, ctx.currentTime + 0.1);
-      gain2.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.11);
-      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
+  /// 페이즈 전환
+  static void phaseChange() {
+    _playTone(440, 0.12, volume: 0.2);
+    Future.delayed(const Duration(milliseconds: 120), () {
+      _playTone(554.37, 0.2, volume: 0.2);
+    });
+  }
 
-      // 재생
-      osc1.start(ctx.currentTime);
-      osc1.stop(ctx.currentTime + 0.2);
-      osc2.start(ctx.currentTime + 0.1);
-      osc2.stop(ctx.currentTime + 0.35);
-    } catch (e) {
-      print('Sound play failed: $e');
-    }
+  /// 투표
+  static void vote() {
+    _playTone(392, 0.1, volume: 0.2);
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _playTone(523.25, 0.15, volume: 0.2);
+    });
+  }
+
+  /// 결과 공개
+  static void resultReveal() {
+    _playTone(261.63, 0.2, volume: 0.25);
+    Future.delayed(const Duration(milliseconds: 200), () {
+      _playTone(329.63, 0.2, volume: 0.25);
+    });
+    Future.delayed(const Duration(milliseconds: 400), () {
+      _playTone(392, 0.2, volume: 0.25);
+    });
+    Future.delayed(const Duration(milliseconds: 600), () {
+      _playTone(523.25, 0.4, volume: 0.3);
+    });
+  }
+
+  /// 타이머 경고
+  static void timerWarning() {
+    _playTone(660, 0.06, type: 'square', volume: 0.1);
+  }
+
+  /// 게임 시작
+  static void gameStart() {
+    _playTone(440, 0.15, volume: 0.2);
+    Future.delayed(const Duration(milliseconds: 150), () {
+      _playTone(554.37, 0.15, volume: 0.2);
+    });
+    Future.delayed(const Duration(milliseconds: 300), () {
+      _playTone(659.25, 0.3, volume: 0.25);
+    });
   }
 }

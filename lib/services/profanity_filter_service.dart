@@ -33,7 +33,6 @@ class ProfanityFilterService {
   /// 금칙어를 필터링하여 대체
   static String filter(String text) {
     String result = text;
-    final lowerText = text.toLowerCase();
 
     for (final word in _blockedWords) {
       final lowerWord = word.toLowerCase();

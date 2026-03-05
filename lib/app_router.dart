@@ -1,42 +1,34 @@
 import 'package:go_router/go_router.dart';
-import 'pages/home_page.dart';
-import 'pages/create_room_page.dart';
-import 'pages/enter_room_page.dart';
-import 'pages/room_page.dart';
-import 'pages/browse_rooms_page.dart';
+import 'pages/lobby_page.dart';
+import 'pages/game_page.dart';
+import 'pages/matching_page.dart';
 
 /// 앱 라우팅 설정
 ///
-/// /           → 홈 (방 만들기 진입)
-/// /create     → 방 생성 화면
-/// /browse     → 방 찾기 화면
-/// /r/:code    → 링크 진입 화면 (닉네임 입력)
-/// /room/:code → 방 메인 화면 (슬롯 + Ready)
+/// /           → 로비 (게임 시작)
+/// /matching   → 매칭 대기 화면
+/// /game/:code → 게임 메인 화면 (채팅/투표/결과)
 final router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(
       path: '/',
-      builder: (_, __) => const HomePage(),
+      builder: (_, __) => const LobbyPage(),
     ),
     GoRoute(
-      path: '/create',
-      builder: (_, __) => const CreateRoomPage(),
-    ),
-    GoRoute(
-      path: '/browse',
-      builder: (_, __) => const BrowseRoomsPage(),
-    ),
-    GoRoute(
-      path: '/r/:code',
-      builder: (_, state) => EnterRoomPage(
-        code: state.pathParameters['code']!,
+      path: '/matching',
+      builder: (_, state) => MatchingPage(
+        nickname: state.uri.queryParameters['nick'] ?? '',
+        avatarShape: state.uri.queryParameters['shape'] ?? 'circle',
+        avatarColor: state.uri.queryParameters['color'] ?? '#00D9FF',
       ),
     ),
     GoRoute(
-      path: '/room/:code',
-      builder: (_, state) => RoomPage(
+      path: '/game/:code',
+      builder: (_, state) => GamePage(
         code: state.pathParameters['code']!,
+        gameId: state.uri.queryParameters['gid'],
+        playerId: state.uri.queryParameters['pid'],
       ),
     ),
   ],

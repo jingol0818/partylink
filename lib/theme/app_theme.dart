@@ -1,5 +1,205 @@
 import 'package:flutter/material.dart';
 
+/// 누가 AI야? Dark Cyber 팔레트
+class CyberColors {
+  // 배경
+  static const Color bgPrimary = Color(0xFF0A0E1F);       // Deep Navy
+  static const Color bgSurface = Color(0xFF141832);        // Dark Indigo
+  static const Color bgSurfaceLight = Color(0xFF1E2346);   // Slate Blue
+  static const Color bgCard = Color(0xFF111827);
+  static const Color bgCardMedium = Color(0xFF1E293B);
+
+  // 텍스트
+  static const Color textPrimary = Color(0xFFF1F5F9);
+  static const Color textSecondary = Color(0xFF94A3B8);
+  static const Color textMuted = Color(0xFF8892B0);
+
+  // 테두리
+  static const Color borderSubtle = Color(0xFF2A3441);
+
+  // 액센트
+  static const Color accentTeal = Color(0xFF00D9FF);       // 주 액센트
+  static const Color accentPurple = Color(0xFF8B5CF6);     // Neon Purple
+  static const Color accentPink = Color(0xFFEC4899);       // Neon Pink
+
+  // 상태
+  static const Color successGreen = Color(0xFF10B981);
+  static const Color neonGreen = Color(0xFF00FF88);        // HUMAN 스탬프
+  static const Color warningAmber = Color(0xFFF59E0B);
+  static const Color gmAmber = Color(0xFFFFB800);          // GM 메시지
+  static const Color errorRed = Color(0xFFEF4444);
+  static const Color alertRed = Color(0xFFFF4757);         // AI 스탬프
+}
+
+/// 라운드별 파스텔 그라데이션 + 색상 시스템
+/// 비주얼 가이드 기반: 예능 프로그램 세트장 느낌
+class GameRoundTheme {
+  final List<Color> gradient;
+  final Color textColor;
+  final Color subTextColor;
+  final Color bubbleBg;
+  final Color bubbleBorder;
+  final Color myBubbleBg;
+  final Color myBubbleBorder;
+  final Color topBarBg;
+  final Color inputBarBg;
+  final Color gmOverlayBg;
+  final Color gmTextColor;
+  final bool isDark;
+
+  const GameRoundTheme({
+    required this.gradient,
+    required this.textColor,
+    required this.subTextColor,
+    required this.bubbleBg,
+    required this.bubbleBorder,
+    required this.myBubbleBg,
+    required this.myBubbleBorder,
+    required this.topBarBg,
+    required this.inputBarBg,
+    required this.gmOverlayBg,
+    required this.gmTextColor,
+    this.isDark = false,
+  });
+
+  /// 대기/매칭 (다크)
+  static const waiting = GameRoundTheme(
+    gradient: [Color(0xFF1A1A2E), Color(0xFF16213E)],
+    textColor: Color(0xFFF1F5F9),
+    subTextColor: Color(0xFF94A3B8),
+    bubbleBg: Color(0xFF1E293B),
+    bubbleBorder: Color(0xFF2A3441),
+    myBubbleBg: Color(0x3000D9FF),
+    myBubbleBorder: Color(0x6000D9FF),
+    topBarBg: Color(0xCC141832),
+    inputBarBg: Color(0xCC141832),
+    gmOverlayBg: Color(0xE6161B2E),
+    gmTextColor: Color(0xFFFFB800),
+    isDark: true,
+  );
+
+  /// Round 1 — 탐색 (민트 파스텔)
+  static const round1 = GameRoundTheme(
+    gradient: [Color(0xFFE0F7FA), Color(0xFFB2EBF2)],
+    textColor: Color(0xFF333333),
+    subTextColor: Color(0xFF666666),
+    bubbleBg: Color(0xCCFFFFFF),
+    bubbleBorder: Color(0x30000000),
+    myBubbleBg: Color(0xFF80DEEA),
+    myBubbleBorder: Color(0xFF4DD0E1),
+    topBarBg: Color(0xCCFFFFFF),
+    inputBarBg: Color(0xCCFFFFFF),
+    gmOverlayBg: Color(0xE6333333),
+    gmTextColor: Color(0xFFFFD54F),
+    isDark: false,
+  );
+
+  /// Round 2 — 심문 (코랄/오렌지 파스텔)
+  static const round2 = GameRoundTheme(
+    gradient: [Color(0xFFFFF3E0), Color(0xFFFFCC80)],
+    textColor: Color(0xFF333333),
+    subTextColor: Color(0xFF666666),
+    bubbleBg: Color(0xCCFFFFFF),
+    bubbleBorder: Color(0x30000000),
+    myBubbleBg: Color(0xFFFFE0B2),
+    myBubbleBorder: Color(0xFFFFB74D),
+    topBarBg: Color(0xCCFFFFFF),
+    inputBarBg: Color(0xCCFFFFFF),
+    gmOverlayBg: Color(0xE6333333),
+    gmTextColor: Color(0xFFFFD54F),
+    isDark: false,
+  );
+
+  /// Round 3 / 최종투표 (핑크 파스텔)
+  static const round3 = GameRoundTheme(
+    gradient: [Color(0xFFFCE4EC), Color(0xFFF48FB1)],
+    textColor: Color(0xFF333333),
+    subTextColor: Color(0xFF666666),
+    bubbleBg: Color(0xCCFFFFFF),
+    bubbleBorder: Color(0x30000000),
+    myBubbleBg: Color(0xFFF8BBD0),
+    myBubbleBorder: Color(0xFFF06292),
+    topBarBg: Color(0xCCFFFFFF),
+    inputBarBg: Color(0xCCFFFFFF),
+    gmOverlayBg: Color(0xE6333333),
+    gmTextColor: Color(0xFFFFD54F),
+    isDark: false,
+  );
+
+  /// 결과 발표 (라벤더 파스텔)
+  static const result = GameRoundTheme(
+    gradient: [Color(0xFFF3E5F5), Color(0xFFCE93D8)],
+    textColor: Color(0xFF333333),
+    subTextColor: Color(0xFF666666),
+    bubbleBg: Color(0xCCFFFFFF),
+    bubbleBorder: Color(0x30000000),
+    myBubbleBg: Color(0xFFE1BEE7),
+    myBubbleBorder: Color(0xFFBA68C8),
+    topBarBg: Color(0xCCFFFFFF),
+    inputBarBg: Color(0xCCFFFFFF),
+    gmOverlayBg: Color(0xE6333333),
+    gmTextColor: Color(0xFFFFD54F),
+    isDark: false,
+  );
+
+  static const voting = round3;
+  static const trapQuestion = round2;
+
+  /// 로비/매칭 (밝은 파스텔 — 파티 느낌)
+  static const lobby = GameRoundTheme(
+    gradient: [Color(0xFFE8F5E9), Color(0xFFB2DFDB)],
+    textColor: Color(0xFF2D3436),
+    subTextColor: Color(0xFF636E72),
+    bubbleBg: Color(0xCCFFFFFF),
+    bubbleBorder: Color(0x30000000),
+    myBubbleBg: Color(0xFF80CBC4),
+    myBubbleBorder: Color(0xFF4DB6AC),
+    topBarBg: Color(0xCCFFFFFF),
+    inputBarBg: Color(0xCCFFFFFF),
+    gmOverlayBg: Color(0xE6333333),
+    gmTextColor: Color(0xFFFFD54F),
+    isDark: false,
+  );
+
+  /// phase + round로 적절한 테마 반환
+  static GameRoundTheme fromGame(String phase, int round) {
+    switch (phase) {
+      case 'waiting':
+        return waiting;
+      case 'chatting':
+        if (round <= 1) return round1;
+        if (round == 2) return round2;
+        return round3;
+      case 'trap_question':
+        return trapQuestion;
+      case 'voting':
+        return voting;
+      case 'result':
+        return result;
+      default:
+        return waiting;
+    }
+  }
+
+  /// 라운드 전환 텍스트
+  static ({String main, String sub}) transitionText(String phase, int round) {
+    switch (phase) {
+      case 'chatting':
+        if (round <= 1) return (main: 'ROUND 1', sub: '탐색 시작');
+        if (round == 2) return (main: 'ROUND 2', sub: '심문 시작');
+        return (main: 'FINAL ROUND', sub: '최종 대화');
+      case 'trap_question':
+        return (main: '⚡ 함정 카드', sub: '긴급 질문!');
+      case 'voting':
+        return (main: '🗳️ VOTE', sub: 'AI를 찾아라!');
+      case 'result':
+        return (main: '🎭 REVEAL', sub: '정체를 공개합니다');
+      default:
+        return (main: '준비', sub: '잠시만...');
+    }
+  }
+}
+
 /// PartyLink 디자인 시스템 색상 (다크 모드)
 class AppColorsDark {
   // 배경 색상
@@ -95,7 +295,6 @@ class AppTheme {
   static ThemeData get lightTheme => _buildTheme(false);
 
   static ThemeData _buildTheme(bool isDark) {
-    final colors = isDark ? AppColorsDark : AppColorsLight;
     final bgPage = isDark ? AppColorsDark.bgPage : AppColorsLight.bgPage;
     final bgCard = isDark ? AppColorsDark.bgCard : AppColorsLight.bgCard;
     final bgElevated = isDark ? AppColorsDark.bgElevated : AppColorsLight.bgElevated;
