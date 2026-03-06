@@ -53,7 +53,7 @@ class LeaderboardWidget extends StatelessWidget {
             ],
           ),
         ),
-        Divider(color: CyberColors.borderSubtle, height: 1),
+        const Divider(color: CyberColors.borderSubtle, height: 1),
         // 목록
         ...leaderboard.take(10).map((stat) => _buildRow(stat)),
       ],
@@ -84,7 +84,7 @@ class LeaderboardWidget extends StatelessWidget {
             child: Text(
               rankIcon,
               style: TextStyle(
-                fontFamily: isTop3 ? null : 'Outfit',
+                fontFamily: isTop3 ? null : 'Pretendard',
                 fontSize: isTop3 ? 18 : 14,
                 fontWeight: FontWeight.w700,
                 color: isTop3 ? null : CyberColors.textSecondary,
@@ -109,7 +109,7 @@ class LeaderboardWidget extends StatelessWidget {
               '${stat.totalScore}',
               textAlign: TextAlign.right,
               style: TextStyle(
-                fontFamily: 'Outfit',
+                fontFamily: 'Pretendard',
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: isTop3 ? CyberColors.accentTeal : CyberColors.textPrimary,
@@ -122,7 +122,7 @@ class LeaderboardWidget extends StatelessWidget {
               '${(stat.winRate * 100).toInt()}%',
               textAlign: TextAlign.right,
               style: const TextStyle(
-                fontFamily: 'Outfit',
+                fontFamily: 'Pretendard',
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: CyberColors.textSecondary,

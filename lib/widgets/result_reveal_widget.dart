@@ -88,8 +88,8 @@ class _ResultRevealWidgetState extends State<ResultRevealWidget>
     final isAi = player.isAi == true;
     final isMe = player.id == widget.myPlayerId;
 
-    final aiColor = const Color(0xFFE53935);
-    final humanColor = const Color(0xFF2E7D32);
+    const aiColor = Color(0xFFE53935);
+    const humanColor = Color(0xFF2E7D32);
 
     return AnimatedOpacity(
       opacity: isRevealed ? 1.0 : 0.3,
@@ -166,7 +166,7 @@ class _ResultRevealWidgetState extends State<ResultRevealWidget>
                           ? '+${player.score}점'
                           : '${player.score}점',
                       style: TextStyle(
-                        fontFamily: 'Outfit',
+                        fontFamily: 'Pretendard',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: player.score > 0 ? humanColor : aiColor,
@@ -197,7 +197,7 @@ class _ResultRevealWidgetState extends State<ResultRevealWidget>
                       Text(
                         isAi ? 'AI' : 'HUMAN',
                         style: TextStyle(
-                          fontFamily: 'Outfit',
+                          fontFamily: 'Pretendard',
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: isAi ? aiColor : humanColor,
@@ -220,7 +220,7 @@ class _ResultRevealWidgetState extends State<ResultRevealWidget>
                 child: Text(
                   '???',
                   style: TextStyle(
-                    fontFamily: 'Outfit',
+                    fontFamily: 'Pretendard',
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: _theme.subTextColor,

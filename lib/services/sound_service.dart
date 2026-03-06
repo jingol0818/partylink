@@ -60,6 +60,25 @@ class SoundService {
     });
   }
 
+  /// 플레이어 입장
+  static void playerJoin() {
+    _playTone(698.46, 0.08, volume: 0.15);
+    Future.delayed(const Duration(milliseconds: 80), () {
+      _playTone(880, 0.12, volume: 0.15);
+    });
+  }
+
+  /// 미션카드 등장
+  static void trapCard() {
+    _playTone(392, 0.1, type: 'triangle', volume: 0.2);
+    Future.delayed(const Duration(milliseconds: 150), () {
+      _playTone(523.25, 0.1, type: 'triangle', volume: 0.2);
+    });
+    Future.delayed(const Duration(milliseconds: 300), () {
+      _playTone(659.25, 0.2, type: 'triangle', volume: 0.25);
+    });
+  }
+
   /// 메시지 수신
   static void messageReceived() {
     _playTone(880, 0.08, volume: 0.15);

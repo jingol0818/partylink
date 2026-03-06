@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// 기하학적 도형 아바타 위젯
+/// 아바타 아이콘 위젯
 ///
 /// 도형(circle/triangle/square/diamond/star) × 색상(hex) 조합
+/// v2.1: 기하학적 도형 → 동물/캐릭터 이모지로 변경
 class AvatarIcon extends StatelessWidget {
   final String shape;
   final String colorHex;
@@ -23,17 +24,15 @@ class AvatarIcon extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: _color.withAlpha(40),
-        shape: shape == 'circle' ? BoxShape.circle : BoxShape.rectangle,
-        borderRadius: shape != 'circle' ? BorderRadius.circular(size * 0.2) : null,
+        color: _color.withAlpha(30),
+        shape: BoxShape.circle,
         border: Border.all(color: _color, width: 2),
       ),
       child: Center(
         child: Text(
-          _shapeChar,
+          _animalEmoji,
           style: TextStyle(
-            fontSize: size * 0.45,
-            color: _color,
+            fontSize: size * 0.5,
             height: 1,
           ),
         ),
@@ -41,20 +40,21 @@ class AvatarIcon extends StatelessWidget {
     );
   }
 
-  String get _shapeChar {
+  /// 도형 → 동물 이모지 매핑
+  String get _animalEmoji {
     switch (shape) {
       case 'circle':
-        return '\u25CF'; // ●
+        return '🐱';
       case 'triangle':
-        return '\u25B2'; // ▲
+        return '🐶';
       case 'square':
-        return '\u25A0'; // ■
+        return '🐰';
       case 'diamond':
-        return '\u25C6'; // ◆
+        return '🦊';
       case 'star':
-        return '\u2605'; // ★
+        return '🐻';
       default:
-        return '\u25CF';
+        return '🐱';
     }
   }
 }

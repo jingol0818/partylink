@@ -92,7 +92,7 @@ begin
     -- 타임아웃: 현재 모인 인원 + AI로 게임 생성
     if v_waiting_count = 0 then
       v_target_count := 1;
-      v_ai_count := 1;
+      v_ai_count := 2;  -- 혼자 → AI 2명 = 총 3인 (미션카드 활성화)
     elsif v_waiting_count = 1 then
       v_target_count := 2;
       v_ai_count := 1;

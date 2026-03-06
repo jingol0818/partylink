@@ -34,5 +34,179 @@
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // ── 결과 공유 카드 생성 (Canvas 2D) ──
+    window._drawShareCard = function(jsonStr) {
+      var data = JSON.parse(jsonStr);
+      var W = 600, H = 800;
+      var c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      var ctx = c.getContext('2d');
+
+      // 배경 그라데이션 (라벤더 파스텔)
+      var bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#F3E5F5');
+      bg.addColorStop(1, '#E1BEE7');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // 라운드 코너 마스크
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(0, 0, W, H, [24]);
+      ctx.clip();
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // 상단 장식 원
+      ctx.globalAlpha = 0.08;
+      ctx.fillStyle = '#9C27B0';
+      ctx.beginPath(); ctx.arc(100, 80, 120, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(500, 120, 80, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // 제목
+      ctx.textAlign = 'center';
+      ctx.font = '600 36px Pretendard, sans-serif';
+      ctx.fillStyle = '#4A148C';
+      ctx.fillText('🎭 누가 AI야?', W/2, 70);
+
+      // 주제
+      ctx.font = '500 18px Pretendard, sans-serif';
+      ctx.fillStyle = '#7B1FA2';
+      ctx.fillText('📌 주제: "' + (data.topic || '자유 대화') + '"', W/2, 115);
+
+      // 구분선
+      ctx.strokeStyle = '#CE93D8';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(60, 140); ctx.lineTo(W-60, 140); ctx.stroke();
+
+      // 플레이어 카드들
+      var players = data.players || [];
+      var cardY = 165;
+      var cardH = 64;
+      var cardGap = 10;
+      var emojiMap = {circle:'🐱', triangle:'🐶', square:'🐰', diamond:'🦊', star:'🐻'};
+
+      for (var i = 0; i < players.length; i++) {
+        var p = players[i];
+        var y = cardY + i * (cardH + cardGap);
+        var isAi = p.isAi === true;
+
+        // 카드 배경
+        ctx.fillStyle = isAi ? '#FFEBEE' : '#E8F5E9';
+        ctx.beginPath();
+        ctx.roundRect(50, y, W-100, cardH, [14]);
+        ctx.fill();
+
+        // 카드 테두리
+        ctx.strokeStyle = isAi ? '#E53935' : '#2E7D32';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(50, y, W-100, cardH, [14]);
+        ctx.stroke();
+
+        // 이모지
+        ctx.textAlign = 'left';
+        ctx.font = '28px sans-serif';
+        ctx.fillText(emojiMap[p.shape] || '🐱', 70, y + 43);
+
+        // 닉네임
+        ctx.font = '600 17px Pretendard, sans-serif';
+        ctx.fillStyle = '#333';
+        var nick = p.nickname || '???';
+        if (p.id === data.myId) nick += ' (나)';
+        ctx.fillText(nick, 110, y + 30);
+
+        // 점수
+        if (!isAi) {
+          ctx.font = '700 14px Outfit, sans-serif';
+          ctx.fillStyle = p.score > 0 ? '#2E7D32' : '#C62828';
+          ctx.fillText((p.score > 0 ? '+' : '') + p.score + '점', 110, y + 52);
+        }
+
+        // AI/HUMAN 스탬프
+        ctx.textAlign = 'right';
+        ctx.font = '700 16px Outfit, sans-serif';
+        if (isAi) {
+          ctx.fillStyle = '#E53935';
+          ctx.fillText('🤖 AI', W-70, y + 40);
+        } else {
+          ctx.fillStyle = '#2E7D32';
+          ctx.fillText('👤 HUMAN', W-70, y + 40);
+        }
+        ctx.textAlign = 'left';
+      }
+
+      // 결과 영역
+      var resultY = cardY + players.length * (cardH + cardGap) + 30;
+
+      // 구분선
+      ctx.strokeStyle = '#CE93D8';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(60, resultY - 10); ctx.lineTo(W-60, resultY - 10); ctx.stroke();
+
+      // 결과 메시지
+      ctx.textAlign = 'center';
+      ctx.font = '800 28px Pretendard, sans-serif';
+      ctx.fillStyle = data.won ? '#2E7D32' : '#C62828';
+      ctx.fillText(data.won ? '🎉 AI를 찾아냈습니다!' : '🤖 AI가 살아남았습니다...', W/2, resultY + 30);
+
+      // 내 점수
+      ctx.font = '600 20px Pretendard, sans-serif';
+      ctx.fillStyle = '#4A148C';
+      var myScore = data.myScore || 0;
+      ctx.fillText('나의 점수: ' + (myScore > 0 ? '+' : '') + myScore + '점', W/2, resultY + 65);
+
+      // 하단 CTA
+      ctx.fillStyle = '#7B1FA2';
+      ctx.fillRect(0, H - 120, W, 120);
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '700 22px Pretendard, sans-serif';
+      ctx.fillText('너도 AI 찾을 수 있어? 🔍', W/2, H - 75);
+
+      ctx.font = '500 16px Pretendard, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.fillText(data.siteUrl || 'partylink.vercel.app', W/2, H - 40);
+
+      ctx.restore();
+      return c;
+    };
+
+    // PNG 다운로드
+    window._downloadShareCard = function(jsonStr) {
+      var c = window._drawShareCard(jsonStr);
+      c.toBlob(function(blob) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'nugaai-result.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+      }, 'image/png');
+    };
+
+    // Web Share API
+    window._shareShareCard = async function(jsonStr) {
+      var c = window._drawShareCard(jsonStr);
+      return new Promise(function(resolve) {
+        c.toBlob(async function(blob) {
+          if (navigator.share && navigator.canShare) {
+            var file = new File([blob], 'nugaai-result.png', {type: 'image/png'});
+            var shareData = {files: [file], title: '누가 AI야? 결과', text: 'AI를 찾아봐!'};
+            if (navigator.canShare(shareData)) {
+              try { await navigator.share(shareData); resolve('shared'); return; } catch(e) {}
+            }
+          }
+          // fallback: 다운로드
+          window._downloadShareCard(jsonStr);
+          resolve('downloaded');
+        }, 'image/png');
+      });
+    };
+  </script>
 </body>
 </html>

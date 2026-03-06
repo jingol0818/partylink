@@ -216,7 +216,7 @@ class _TrapCardWidgetState extends State<TrapCardWidget>
           Text(
             '${widget.remaining.inSeconds}초',
             style: const TextStyle(
-              fontFamily: 'Outfit',
+              fontFamily: 'Pretendard',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: CyberColors.warningAmber,

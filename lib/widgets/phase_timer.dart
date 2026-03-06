@@ -45,7 +45,7 @@ class PhaseTimer extends StatelessWidget {
         AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 200),
           style: TextStyle(
-            fontFamily: 'Outfit',
+            fontFamily: 'Pretendard',
             fontSize: isUrgent ? 22 : 16,
             fontWeight: FontWeight.w700,
             color: color,

@@ -68,26 +68,36 @@ class GameRoom {
   /// 총 인원 (인간 + AI)
   int get totalPlayers => playerCount + aiCount;
 
-  /// 최대 라운드 수 (2인→1R, 3인+→2R)
-  int get maxRounds => playerCount <= 2 ? 1 : 2;
+  /// 최대 라운드 수 (2인→2R, 3인+→3R)
+  int get maxRounds => totalPlayers <= 2 ? 2 : 3;
 
   /// 다음 라운드 존재 여부
   bool get hasNextRound => round < maxRounds;
 
-  /// 인원 기반 대화 시간 (초)
-  int get chattingSeconds => switch (playerCount) {
-    <= 2 => 90,
-    3 => 120,
-    4 => 150,
-    _ => 180,
+  /// 현재 라운드가 최종 라운드인지
+  bool get isFinalRound => round >= maxRounds;
+
+  /// 라운드별 대화 시간 (초)
+  /// R1: 탐색(90s) / R2: 반론(60s) / R3: 최종심판(45s)
+  int get chattingSeconds => switch (round) {
+    1 => 90,
+    2 => 60,
+    _ => 45,
   };
 
-  /// 인원 기반 투표 시간 (초)
-  int get votingSeconds => switch (playerCount) {
-    <= 2 => 15,
-    3 => 20,
-    4 => 25,
-    _ => 30,
+  /// 라운드별 투표 시간 (초)
+  /// R1 중간투표: 20s / 최종투표: 30s
+  int get votingSeconds => switch (round) {
+    1 => 20,   // 중간투표
+    _ => 30,   // 최종투표
+  };
+
+  /// 라운드 이름
+  String get roundName => switch (round) {
+    1 => '탐색',
+    2 => '반론',
+    3 => '최종 심판',
+    _ => '라운드 $round',
   };
 
   GameRoom copyWith({

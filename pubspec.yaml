@@ -16,6 +16,7 @@ dependencies:
   intl: ^0.19.0
   web: ^1.0.0
   url_launcher: ^6.3.2
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -39,14 +40,4 @@ flutter:
           weight: 600
         - asset: assets/fonts/Pretendard-Bold.otf
           weight: 700
-    # 숫자/영문 강조용 - Outfit (제목, 숫자, 브랜딩)
-    - family: Outfit
-      fonts:
-        - asset: assets/fonts/Outfit-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/Outfit-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Outfit-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Outfit-Bold.ttf
-          weight: 700
+    # Outfit → Pretendard로 통일 (Outfit 폰트 로딩 이슈)

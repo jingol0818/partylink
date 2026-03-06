@@ -19,7 +19,8 @@ class GameService {
       'p_avatar_color': avatarColor,
     });
 
-    final data = result as Map<String, dynamic>;
+    if (result == null) throw Exception('게임 생성 실패: 응답 없음');
+    final data = Map<String, dynamic>.from(result as Map);
     return (
       gameId: data['game_id'].toString(),
       code: data['code'].toString(),

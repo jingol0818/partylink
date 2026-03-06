@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/matching_service.dart';
 import '../services/session_service.dart';
+import '../services/sound_service.dart';
 
 /// 매칭 대기 화면
 /// 풀 기반 매칭: 혼자→1v1, 2명→3~4인, 3명+→4~5인
@@ -70,10 +71,11 @@ class _MatchingPageState extends State<MatchingPage>
       _matchingService.subscribeToPool(_poolId!);
       _matchingService.onMatchUpdate.listen((data) {
         if (data['status'] == 'matched' && mounted) {
-          _onMatched(
-            data['matched_game_id'] as String,
-            data['matched_player_id'] as String,
-          );
+          final gid = data['matched_game_id'];
+          final pid = data['matched_player_id'];
+          if (gid != null && pid != null) {
+            _onMatched(gid.toString(), pid.toString());
+          }
         }
       });
 
@@ -97,16 +99,17 @@ class _MatchingPageState extends State<MatchingPage>
 
     try {
       final result = await _matchingService.tryMatch(_poolId!);
-      final status = result['status'] as String;
+      final status = result['status']?.toString() ?? 'unknown';
 
       if (status == 'matched') {
-        _onMatched(
-          result['game_id'] as String,
-          result['player_id'] as String,
-        );
+        final gid = result['game_id'];
+        final pid = result['player_id'];
+        if (gid != null && pid != null) {
+          _onMatched(gid.toString(), pid.toString());
+        }
       } else if (status == 'waiting') {
-        final count = result['waiting_count'] as int? ?? 1;
-        if (mounted) setState(() => _waitingCount = count);
+        final count = result['waiting_count'];
+        if (mounted) setState(() => _waitingCount = (count is int) ? count : 1);
       }
     } catch (e) {
       // 조용히 재시도
@@ -119,6 +122,8 @@ class _MatchingPageState extends State<MatchingPage>
     _pollTimer?.cancel();
     _tickTimer?.cancel();
 
+    SoundService.activate();
+    SoundService.matchFound();
     SessionService.setMemberId(playerId);
 
     // 매칭 완료 → 게임 화면으로
@@ -245,7 +250,7 @@ class _MatchingPageState extends State<MatchingPage>
                           Text(
                             '$_waitingCount명',
                             style: const TextStyle(
-                              fontFamily: 'Outfit',
+                              fontFamily: 'Pretendard',
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
                               color: primaryColor,
@@ -266,9 +271,9 @@ class _MatchingPageState extends State<MatchingPage>
                             ),
                           ),
                           Text(
-                            '${_elapsedSeconds}초',
+                            '$_elapsedSeconds초',
                             style: const TextStyle(
-                              fontFamily: 'Outfit',
+                              fontFamily: 'Pretendard',
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
                               color: textDark,
@@ -283,7 +288,7 @@ class _MatchingPageState extends State<MatchingPage>
                 // 10초 타임아웃 안내
                 if (_elapsedSeconds >= 8)
                   const Text(
-                    '곧 AI와 매칭됩니다...',
+                    '비밀의 방에 입장합니다...',
                     style: TextStyle(
                       fontFamily: 'Pretendard',
                       fontSize: 13,

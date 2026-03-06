@@ -45,10 +45,10 @@ class _LobbyPageState extends State<LobbyPage> {
   }
 
   void _regenerateProfile() {
-    _nickname = NicknameService.generateNickname();
     final avatar = NicknameService.generateAvatar();
     _avatarShape = avatar.shape;
     _avatarColor = avatar.color;
+    _nickname = NicknameService.generateNickname(shape: _avatarShape);
     setState(() {});
   }
 
@@ -126,7 +126,7 @@ class _LobbyPageState extends State<LobbyPage> {
                 const Text(
                   '누가 AI야?',
                   style: TextStyle(
-                    fontFamily: 'Outfit',
+                    fontFamily: 'Pretendard',
                     fontSize: 34,
                     fontWeight: FontWeight.w800,
                     color: primaryColor,
@@ -136,7 +136,7 @@ class _LobbyPageState extends State<LobbyPage> {
                 const Text(
                   'Who is the AI?',
                   style: TextStyle(
-                    fontFamily: 'Outfit',
+                    fontFamily: 'Pretendard',
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                     color: textSub,
@@ -165,18 +165,13 @@ class _LobbyPageState extends State<LobbyPage> {
                       ),
                       child: Column(
                         children: [
-                          // 아바타
+                          // 아바타 (동물 이모지)
                           Container(
                             width: 72,
                             height: 72,
                             decoration: BoxDecoration(
-                              color: avatarColorParsed.withAlpha(50),
-                              shape: _avatarShape == 'circle'
-                                  ? BoxShape.circle
-                                  : BoxShape.rectangle,
-                              borderRadius: _avatarShape != 'circle'
-                                  ? BorderRadius.circular(16)
-                                  : null,
+                              color: avatarColorParsed.withAlpha(30),
+                              shape: BoxShape.circle,
                               border: Border.all(
                                 color: avatarColorParsed,
                                 width: 2.5,
@@ -185,7 +180,7 @@ class _LobbyPageState extends State<LobbyPage> {
                             child: Center(
                               child: Text(
                                 _getShapeEmoji(_avatarShape),
-                                style: const TextStyle(fontSize: 28),
+                                style: const TextStyle(fontSize: 32),
                               ),
                             ),
                           ),
@@ -378,17 +373,17 @@ class _LobbyPageState extends State<LobbyPage> {
   String _getShapeEmoji(String shape) {
     switch (shape) {
       case 'circle':
-        return '\u25CF'; // ●
+        return '🐱';
       case 'triangle':
-        return '\u25B2'; // ▲
+        return '🐶';
       case 'square':
-        return '\u25A0'; // ■
+        return '🐰';
       case 'diamond':
-        return '\u25C6'; // ◆
+        return '🦊';
       case 'star':
-        return '\u2605'; // ★
+        return '🐻';
       default:
-        return '\u25CF';
+        return '🐱';
     }
   }
 }
